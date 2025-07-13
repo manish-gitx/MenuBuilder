@@ -68,7 +68,7 @@ export function handleError(error: unknown): NextResponse<ApiResponse> {
   console.error('API Error:', error)
 
   if (error instanceof ZodError) {
-    const validationErrors = error.issues.map((err: { path: (string | number)[]; message: string }) => `${err.path.join('.')}: ${err.message}`).join(', ')
+    const validationErrors = error.issues.map((err: any) => `${err.path.join('.')}: ${err.message}`).join(', ')
     return errorResponse(`Validation error: ${validationErrors}`, 400)
   }
 

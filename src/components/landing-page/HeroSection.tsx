@@ -66,7 +66,6 @@ export function HeroSection() {
           {/* Hero Image */}
           <div className="mt-20 relative">
             <div className="relative max-w-4xl mx-auto">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img 
                 src="https://i.ibb.co/nNvVc0vx/hero-image.jpg"
                 alt="Beautiful catering menu interface"
