@@ -1,16 +1,16 @@
-import { NextResponse } from 'next/server'
+THIS SHOULD BE A LINTER ERRORimport { NextResponse } from 'next/server'
 import { ZodError } from 'zod'
 import { Prisma } from '@prisma/client'
 
 // API Response types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean
   data?: T
   error?: string
   message?: string
 }
 
-export interface PaginatedResponse<T = any> extends ApiResponse<T> {
+export interface PaginatedResponse<T = unknown> extends ApiResponse<T> {
   pagination?: {
     page: number
     limit: number
@@ -68,7 +68,7 @@ export function handleError(error: unknown): NextResponse<ApiResponse> {
   console.error('API Error:', error)
 
   if (error instanceof ZodError) {
-    const validationErrors = error.issues.map((err: any) => `${err.path.join('.')}: ${err.message}`).join(', ')
+    const validationErrors = error.issues.map((err) => `${err.path.join('.')}: ${err.message}`).join(', ')
     return errorResponse(`Validation error: ${validationErrors}`, 400)
   }
 
@@ -195,9 +195,11 @@ export const defaultMenuItemInclude = {
 }
 
 // Format menu item with tags for response
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function formatMenuItemResponse(item: any) {
   return {
     ...item,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     tags: item.tags?.map((tagRelation: any) => tagRelation.tag) || []
   }
 }

@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     
     const validatedQuery = tagQuerySchema.parse(queryParams)
     
-    const where: any = {}
+    const where: Record<string, any> = {}
     
     if (validatedQuery.type) {
       where.type = validatedQuery.type
