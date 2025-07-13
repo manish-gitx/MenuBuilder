@@ -6,14 +6,28 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate",
+    "db:seed": "ts-node prisma/seed.ts",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.24.0",
+    "@prisma/client": "^6.11.1",
+    "@types/multer": "^2.0.0",
+    "@types/multer-s3": "^3.0.3",
+    "@types/uuid": "^10.0.0",
+    "aws-sdk": "^2.1692.0",
     "lucide-react": "^0.525.0",
+    "multer": "^2.0.1",
+    "multer-s3": "^3.0.1",
     "next": "15.3.5",
+    "prisma": "^6.11.1",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "uuid": "^11.1.0",
+    "zod": "^4.0.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -24,6 +38,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.3.5",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }

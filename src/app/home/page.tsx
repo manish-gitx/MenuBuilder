@@ -57,7 +57,7 @@ export default async function Page() {
                 </button>
               </div>
               
-              <div className="p-8 bg-card rounded-lg shadow-card border border-border/50">
+              {/* <div className="p-8 bg-card rounded-lg shadow-card border border-border/50">
                 <h3 className="text-2xl font-semibold mb-4">Browse Templates</h3>
                 <p className="text-muted-foreground mb-6">
                   Choose from professionally designed templates to get started quickly
@@ -65,7 +65,7 @@ export default async function Page() {
                 <button className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/80 px-6 py-3 rounded-lg font-medium transition-colors">
                   View Templates
                 </button>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

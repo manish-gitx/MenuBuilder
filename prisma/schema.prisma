@@ -1,0 +1,99 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model Menu {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  isPublic    Boolean  @default(false)
+  shareToken  String?  @unique
+  userId      String   // Clerk user ID
+  userEmail   String   // User's email from Clerk
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  categories Category[]
+
+  @@map("menus")
+}
+
+model Category {
+  id               String   @id @default(uuid())
+  menuId           String
+  parentCategoryId String?
+  name             String
+  description      String?
+  sortOrder        Int      @default(0)
+  isActive         Boolean  @default(true)
+  hasSubcategories Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  menu             Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  parentCategory   Category?  @relation("CategoryHierarchy", fields: [parentCategoryId], references: [id], onDelete: Cascade)
+  childCategories  Category[] @relation("CategoryHierarchy")
+  menuItems        MenuItem[]
+
+  @@map("categories")
+}
+
+model MenuItem {
+  id          String   @id @default(uuid())
+  categoryId  String
+  name        String
+  description String?
+  ingredients String?
+  imageUrl    String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  category Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  tags     MenuItemTag[]
+
+  @@map("menu_items")
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  name      String
+  type      String   // 'dietary', 'highlight', 'cuisine', 'spice_level'
+  color     String   @default("#000000")
+  icon      String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  menuItems MenuItemTag[]
+
+  @@map("tags")
+}
+
+model MenuItemTag {
+  menuItemId String
+  tagId      String
+  createdAt  DateTime @default(now())
+
+  // Relations
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  tag      Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([menuItemId, tagId])
+  @@map("menu_item_tags")
+}
