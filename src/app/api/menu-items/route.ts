@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     
     const validatedQuery = menuItemQuerySchema.parse(queryParams)
     
-    const where: any = {
+    const where: Record<string, unknown> = {
       category: {
         menu: {
           userId: userId // Only show items from user's menus
@@ -139,6 +139,10 @@ export async function POST(request: NextRequest) {
         where: { id: menuItem.id },
         include: defaultMenuItemInclude
       })
+      
+      if (!updatedMenuItem) {
+        return errorResponse('Menu item not found after creation', 500)
+      }
       
       return successResponse(formatMenuItemResponse(updatedMenuItem), 'Menu item created successfully')
     }

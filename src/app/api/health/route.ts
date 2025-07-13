@@ -1,9 +1,9 @@
-import { NextRequest } from 'next/server'
+
 import { prisma } from '@/lib/prisma'
 import { successResponse, errorResponse } from '@/lib/utils'
 
 // GET /api/health - Health check endpoint with database connectivity test
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Test database connection
     await prisma.$connect()

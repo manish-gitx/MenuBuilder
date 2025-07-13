@@ -3,14 +3,14 @@ import { ZodError } from 'zod'
 import { Prisma } from '@prisma/client'
 
 // API Response types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean
   data?: T
   error?: string
   message?: string
 }
 
-export interface PaginatedResponse<T = any> extends ApiResponse<T> {
+export interface PaginatedResponse<T = unknown> extends ApiResponse<T> {
   pagination?: {
     page: number
     limit: number
@@ -68,7 +68,7 @@ export function handleError(error: unknown): NextResponse<ApiResponse> {
   console.error('API Error:', error)
 
   if (error instanceof ZodError) {
-    const validationErrors = error.issues.map((err: any) => `${err.path.join('.')}: ${err.message}`).join(', ')
+    const validationErrors = error.issues.map((err: { path: (string | number)[]; message: string }) => `${err.path.join('.')}: ${err.message}`).join(', ')
     return errorResponse(`Validation error: ${validationErrors}`, 400)
   }
 
@@ -106,7 +106,7 @@ export function isValidUUID(uuid: string): boolean {
 }
 
 // Business logic validation helpers
-export async function validateCategoryCanAcceptItems(prisma: any, categoryId: string): Promise<boolean> {
+export async function validateCategoryCanAcceptItems(prisma: { category: { findFirst: (args: { where: { parentCategoryId: string } }) => Promise<unknown> } }, categoryId: string): Promise<boolean> {
   // Check if category has subcategories
   const hasSubcategories = await prisma.category.findFirst({
     where: { parentCategoryId: categoryId }
@@ -115,7 +115,7 @@ export async function validateCategoryCanAcceptItems(prisma: any, categoryId: st
   return !hasSubcategories
 }
 
-export async function validateCategoryCanAcceptSubcategories(prisma: any, categoryId: string): Promise<boolean> {
+export async function validateCategoryCanAcceptSubcategories(prisma: { menuItem: { findFirst: (args: { where: { categoryId: string } }) => Promise<unknown> } }, categoryId: string): Promise<boolean> {
   // Check if category has menu items
   const hasMenuItems = await prisma.menuItem.findFirst({
     where: { categoryId }
@@ -195,26 +195,26 @@ export const defaultMenuItemInclude = {
 }
 
 // Format menu item with tags for response
-export function formatMenuItemResponse(item: any) {
+export function formatMenuItemResponse(item: Record<string, unknown>) {
   return {
     ...item,
-    tags: item.tags?.map((tagRelation: any) => tagRelation.tag) || []
+    tags: (item.tags as { tag: unknown }[])?.map((tagRelation: { tag: unknown }) => tagRelation.tag) || []
   }
 }
 
 // Format category with nested structure
-export function formatCategoryResponse(category: any) {
+export function formatCategoryResponse(category: Record<string, unknown>) {
   return {
     ...category,
-    menuItems: category.menuItems?.map(formatMenuItemResponse) || [],
-    childCategories: category.childCategories?.map(formatCategoryResponse) || []
+    menuItems: (category.menuItems as Record<string, unknown>[])?.map(formatMenuItemResponse) || [],
+    childCategories: (category.childCategories as Record<string, unknown>[])?.map(formatCategoryResponse) || []
   }
 }
 
 // Format complete menu response
-export function formatMenuResponse(menu: any) {
+export function formatMenuResponse(menu: Record<string, unknown>) {
   return {
     ...menu,
-    categories: menu.categories?.map(formatCategoryResponse) || []
+    categories: (menu.categories as Record<string, unknown>[])?.map(formatCategoryResponse) || []
   }
 } 

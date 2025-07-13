@@ -15,17 +15,17 @@ export const s3 = new AWS.S3()
 // S3 upload configuration for multer
 export const upload = multer({
   storage: multerS3({
-    s3: s3 as any,
+    s3: s3 as unknown as Parameters<typeof multerS3>[0]['s3'],
     bucket: process.env.AWS_S3_BUCKET_NAME || 'menu-catering',
-    metadata: function (req, file, cb) {
-      cb(null, { fieldName: file.fieldname })
-    },
-    key: function (req, file, cb) {
-      // Generate unique filename with UUID
-      const fileExtension = file.originalname.split('.').pop()
-      const fileName = `menu-items/${uuidv4()}.${fileExtension}`
-      cb(null, fileName)
-    }
+          metadata: function (req: unknown, file: { fieldname: string }, cb: (error: Error | null, metadata?: Record<string, string>) => void) {
+        cb(null, { fieldName: file.fieldname })
+      },
+      key: function (req: unknown, file: { originalname: string }, cb: (error: Error | null, key?: string) => void) {
+        // Generate unique filename with UUID
+        const fileExtension = file.originalname.split('.').pop()
+        const fileName = `menu-items/${uuidv4()}.${fileExtension}`
+        cb(null, fileName)
+      }
   }),
   limits: {
     fileSize: 5 * 1024 * 1024 // 5MB limit
@@ -36,7 +36,7 @@ export const upload = multer({
       cb(null, true)
     } else {
       const error = new Error('Only image files are allowed!')
-      cb(error as any, false)
+      cb(error as Error, false)
     }
   }
 })

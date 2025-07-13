@@ -5,9 +5,9 @@ import { successResponse, errorResponse, handleError, formatMenuItemResponse, de
 import { deleteImageFromS3 } from '@/lib/s3'
 
 // GET /api/menu-items/[id] - Get a specific menu item
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const menuItemId = uuidSchema.parse(params.id)
+    const menuItemId = uuidSchema.parse((await params).id)
     
     const menuItem = await prisma.menuItem.findUnique({
       where: { id: menuItemId },
@@ -25,9 +25,9 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 // PUT /api/menu-items/[id] - Update a specific menu item
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const menuItemId = uuidSchema.parse(params.id)
+    const menuItemId = uuidSchema.parse((await params).id)
     const body = await request.json()
     const validatedData = updateMenuItemSchema.parse(body)
     
@@ -74,6 +74,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         include: defaultMenuItemInclude
       })
       
+      if (!menuItemWithTags) {
+        return errorResponse('Menu item not found after update', 500)
+      }
+      
       return successResponse(formatMenuItemResponse(menuItemWithTags), 'Menu item updated successfully')
     }
     
@@ -84,9 +88,9 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 // DELETE /api/menu-items/[id] - Delete a specific menu item
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const menuItemId = uuidSchema.parse(params.id)
+    const menuItemId = uuidSchema.parse((await params).id)
     
     // Check if menu item exists
     const existingMenuItem = await prisma.menuItem.findUnique({

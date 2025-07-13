@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
       return errorResponse('Menu not found or unauthorized', 404)
     }
     
-    const where: any = {
+    const where: Record<string, unknown> = {
       menuId: validatedQuery.menuId
     }
     

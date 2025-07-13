@@ -5,7 +5,7 @@ import { updateMenuSchema, uuidSchema } from '@/lib/validations'
 import { successResponse, errorResponse, handleError, formatMenuResponse, defaultMenuInclude } from '@/lib/utils'
 
 // GET /api/menus/[id] - Get a specific menu with all its data
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { userId } = await auth()
     
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       })
     }
     
-    const menuId = uuidSchema.parse(params.id)
+    const menuId = uuidSchema.parse((await params).id)
     
     const menu = await prisma.menu.findUnique({
       where: { 
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 // PUT /api/menus/[id] - Update a specific menu
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { userId } = await auth()
     
@@ -48,7 +48,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       })
     }
     
-    const menuId = uuidSchema.parse(params.id)
+    const menuId = uuidSchema.parse((await params).id)
     const body = await request.json()
     const validatedData = updateMenuSchema.parse(body)
     
@@ -87,7 +87,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 // DELETE /api/menus/[id] - Delete a specific menu
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { userId } = await auth()
     
@@ -98,7 +98,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       })
     }
     
-    const menuId = uuidSchema.parse(params.id)
+    const menuId = uuidSchema.parse((await params).id)
     
     // Check if menu exists and belongs to the user
     const existingMenu = await prisma.menu.findUnique({
