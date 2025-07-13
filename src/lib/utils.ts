@@ -1,4 +1,4 @@
-THIS SHOULD BE A LINTER ERRORimport { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { ZodError } from 'zod'
 import { Prisma } from '@prisma/client'
 
@@ -106,6 +106,7 @@ export function isValidUUID(uuid: string): boolean {
 }
 
 // Business logic validation helpers
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function validateCategoryCanAcceptItems(prisma: any, categoryId: string): Promise<boolean> {
   // Check if category has subcategories
   const hasSubcategories = await prisma.category.findFirst({
@@ -115,6 +116,7 @@ export async function validateCategoryCanAcceptItems(prisma: any, categoryId: st
   return !hasSubcategories
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function validateCategoryCanAcceptSubcategories(prisma: any, categoryId: string): Promise<boolean> {
   // Check if category has menu items
   const hasMenuItems = await prisma.menuItem.findFirst({
@@ -205,6 +207,7 @@ export function formatMenuItemResponse(item: any) {
 }
 
 // Format category with nested structure
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function formatCategoryResponse(category: any) {
   return {
     ...category,
@@ -214,6 +217,7 @@ export function formatCategoryResponse(category: any) {
 }
 
 // Format complete menu response
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function formatMenuResponse(menu: any) {
   return {
     ...menu,

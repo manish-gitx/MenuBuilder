@@ -1,5 +1,6 @@
 import { ArrowRight, Play } from "lucide-react";
 import { SignInButton } from "@clerk/nextjs";
+import Image from "next/image";
 
 export function HeroSection() {
   return (
@@ -66,7 +67,7 @@ export function HeroSection() {
           {/* Hero Image */}
           <div className="mt-20 relative">
             <div className="relative max-w-4xl mx-auto">
-              <img 
+              <Image 
                 src="https://i.ibb.co/nNvVc0vx/hero-image.jpg"
                 alt="Beautiful catering menu interface"
                 width={1200}
