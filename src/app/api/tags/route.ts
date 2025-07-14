@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { createTagSchema, tagQuerySchema } from '@/lib/validations'
 import { successResponse, paginatedResponse, handleError } from '@/lib/utils'
-import { Prisma } from '@prisma/client'
 
 // GET /api/tags - Get all tags with filtering and pagination
 export async function GET(request: NextRequest) {
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     
     const validatedQuery = tagQuerySchema.parse(queryParams)
     
-    const where: Prisma.TagWhereInput = {}
+    const where: any = {}
     
     if (validatedQuery.type) {
       where.type = validatedQuery.type

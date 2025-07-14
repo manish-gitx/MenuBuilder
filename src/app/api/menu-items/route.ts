@@ -3,7 +3,6 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { createMenuItemSchema, menuItemQuerySchema } from '@/lib/validations'
 import { successResponse, paginatedResponse, errorResponse, handleError, formatMenuItemResponse, defaultMenuItemInclude, validateCategoryCanAcceptItems } from '@/lib/utils'
-import { Prisma } from '@prisma/client'
 
 // GET /api/menu-items - Get menu items with filtering and pagination
 export async function GET(request: NextRequest) {
@@ -22,7 +21,7 @@ export async function GET(request: NextRequest) {
     
     const validatedQuery = menuItemQuerySchema.parse(queryParams)
     
-    const where: Prisma.MenuItemWhereInput = {
+    const where: any = {
       category: {
         menu: {
           userId: userId // Only show items from user's menus

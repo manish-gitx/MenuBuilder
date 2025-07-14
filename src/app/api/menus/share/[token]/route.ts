@@ -4,9 +4,10 @@ import { shareTokenSchema } from '@/lib/validations'
 import { successResponse, errorResponse, handleError, formatMenuResponse, defaultMenuInclude } from '@/lib/utils'
 
 // GET /api/menus/share/[token] - Get a menu by share token for public access
-export async function GET(request: NextRequest, { params }: { params: { token: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   try {
-    const { token } = shareTokenSchema.parse({ token: params.token })
+    const { token: tokenParam } = await params
+    const { token } = shareTokenSchema.parse({ token: tokenParam })
     
     const menu = await prisma.menu.findUnique({
       where: { shareToken: token },

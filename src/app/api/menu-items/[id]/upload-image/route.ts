@@ -2,13 +2,14 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { uuidSchema } from '@/lib/validations'
 import { successResponse, errorResponse, handleError } from '@/lib/utils'
-import { deleteImageFromS3, s3 } from '@/lib/s3'
+import { upload, deleteImageFromS3, s3 } from '@/lib/s3'
 import { v4 as uuidv4 } from 'uuid'
 
 // POST /api/menu-items/[id]/upload-image - Upload an image for a menu item
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const menuItemId = uuidSchema.parse(params.id)
+    const { id } = await params
+    const menuItemId = uuidSchema.parse(id)
     
     // Check if menu item exists
     const existingMenuItem = await prisma.menuItem.findUnique({
