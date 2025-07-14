@@ -124,8 +124,8 @@ export default function Dashboard() {
         <div className="container mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
-              <div className="text-2xl font-bold text-primary">MenuMaker</div>
-              <div className="text-sm text-muted-foreground">Dashboard</div>
+              <div className="text-2xl font-bold text-primary">Dashboard</div>
+              {/* <div className="text-sm text-muted-foreground">Dashboard</div> */}
             </div>
             <UserButton 
               showName 
