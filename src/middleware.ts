@@ -17,7 +17,7 @@ const isPublicRoute = createRouteMatcher([
   '/api/tags' // GET tags is public (POST will be handled by individual route)
 ]);
 
-export default clerkMiddleware((auth, req) => {
+export default clerkMiddleware(async (auth, req) => {
   // Allow public routes to pass through
   if (isPublicRoute(req)) {
     return;
@@ -25,7 +25,7 @@ export default clerkMiddleware((auth, req) => {
   
   // Protect API routes that require authentication
   if (isProtectedRoute(req)) {
-    auth().protect();
+    await auth.protect();
   }
 });
 
