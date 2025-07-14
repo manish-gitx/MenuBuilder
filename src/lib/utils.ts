@@ -3,14 +3,14 @@ import { ZodError } from 'zod'
 import { Prisma } from '@prisma/client'
 
 // API Response types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean
   data?: T
   error?: string
   message?: string
 }
 
-export interface PaginatedResponse<T = any> extends ApiResponse<T> {
+export interface PaginatedResponse<T = unknown> extends ApiResponse<T> {
   pagination?: {
     page: number
     limit: number
@@ -68,7 +68,7 @@ export function handleError(error: unknown): NextResponse<ApiResponse> {
   console.error('API Error:', error)
 
   if (error instanceof ZodError) {
-    const validationErrors = error.issues.map((err: any) => `${err.path.join('.')}: ${err.message}`).join(', ')
+    const validationErrors = error.issues.map((err) => `${err.path.join('.')}: ${err.message}`).join(', ')
     return errorResponse(`Validation error: ${validationErrors}`, 400)
   }
 
@@ -106,6 +106,7 @@ export function isValidUUID(uuid: string): boolean {
 }
 
 // Business logic validation helpers
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function validateCategoryCanAcceptItems(prisma: any, categoryId: string): Promise<boolean> {
   // Check if category has subcategories
   const hasSubcategories = await prisma.category.findFirst({
@@ -115,6 +116,7 @@ export async function validateCategoryCanAcceptItems(prisma: any, categoryId: st
   return !hasSubcategories
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function validateCategoryCanAcceptSubcategories(prisma: any, categoryId: string): Promise<boolean> {
   // Check if category has menu items
   const hasMenuItems = await prisma.menuItem.findFirst({
@@ -195,14 +197,17 @@ export const defaultMenuItemInclude = {
 }
 
 // Format menu item with tags for response
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function formatMenuItemResponse(item: any) {
   return {
     ...item,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     tags: item.tags?.map((tagRelation: any) => tagRelation.tag) || []
   }
 }
 
 // Format category with nested structure
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function formatCategoryResponse(category: any) {
   return {
     ...category,
@@ -212,6 +217,7 @@ export function formatCategoryResponse(category: any) {
 }
 
 // Format complete menu response
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function formatMenuResponse(menu: any) {
   return {
     ...menu,

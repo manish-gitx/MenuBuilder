@@ -33,7 +33,8 @@ export async function GET(request: NextRequest) {
       return errorResponse('Menu not found or unauthorized', 404)
     }
     
-    const where: any = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: Record<string, any> = {
       menuId: validatedQuery.menuId
     }
     

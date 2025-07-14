@@ -21,7 +21,8 @@ export async function GET(request: NextRequest) {
     
     const validatedQuery = menuItemQuerySchema.parse(queryParams)
     
-    const where: any = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: Record<string, any> = {
       category: {
         menu: {
           userId: userId // Only show items from user's menus

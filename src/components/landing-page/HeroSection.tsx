@@ -8,11 +8,17 @@ export function HeroSection() {
       <div className="absolute top-0 left-0 right-0 z-10 p-6">
         <div className="container mx-auto flex justify-between items-center">
           <div className="text-2xl font-bold text-primary"></div>
-          <SignInButton mode="modal" fallbackRedirectUrl="/home">
+          {process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.startsWith('pk_') ? (
+            <SignInButton mode="modal" fallbackRedirectUrl="/home">
+              <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-primary bg-primary text-primary-foreground hover:bg-primary-hover hover:text-white px-6 py-2 shadow-md">
+                Sign In
+              </button>
+            </SignInButton>
+          ) : (
             <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-primary bg-primary text-primary-foreground hover:bg-primary-hover hover:text-white px-6 py-2 shadow-md">
               Sign In
             </button>
-          </SignInButton>
+          )}
         </div>
       </div>
 
@@ -39,12 +45,19 @@ export function HeroSection() {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <SignInButton mode="modal" fallbackRedirectUrl="/home">
+              {process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.startsWith('pk_') ? (
+                <SignInButton mode="modal" fallbackRedirectUrl="/home">
+                  <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-lg font-medium ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary-hover shadow-warm hover:shadow-lg transform hover:-translate-y-0.5 px-8 py-4 h-auto">
+                    Start Creating Now
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </button>
+                </SignInButton>
+              ) : (
                 <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-lg font-medium ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary-hover shadow-warm hover:shadow-lg transform hover:-translate-y-0.5 px-8 py-4 h-auto">
                   Start Creating Now
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </button>
-              </SignInButton>
+              )}
               <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-lg font-medium ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground px-8 py-4 h-auto">
                 <Play className="mr-2 h-5 w-5" />
                 See How It Works
@@ -66,6 +79,7 @@ export function HeroSection() {
           {/* Hero Image */}
           <div className="mt-20 relative">
             <div className="relative max-w-4xl mx-auto">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img 
                 src="https://i.ibb.co/nNvVc0vx/hero-image.jpg"
                 alt="Beautiful catering menu interface"
