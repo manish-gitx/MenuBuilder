@@ -83,7 +83,7 @@ export function CategorySidebar({
   }
 
   const renderCategory = (category: Category, level: number = 0) => {
-    const hasChildren = category.childCategories && category.childCategories.length > 0
+    const hasChildren = (category.childCategories?.length ?? 0) > 0
     const isExpanded = expandedCategories.has(category.id)
     const isSelected = selectedCategoryId === category.id
 
