@@ -4,6 +4,7 @@ import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ReactNode } from "react";
 
+import { ToastProvider } from "@/components/ui/Toast";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -43,6 +44,7 @@ export default function RootLayout({
           <main>
             {children}
           </main>
+          <ToastProvider />
         </body>
       </html>
     </ConditionalClerkProvider>
