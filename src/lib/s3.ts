@@ -15,7 +15,7 @@ export const s3 = new AWS.S3()
 // S3 upload configuration for multer
 export const upload = multer({
   storage: multerS3({
-    s3: s3 as any,
+    s3: s3 as AWS.S3,
     bucket: process.env.AWS_S3_BUCKET_NAME || 'menu-catering',
     metadata: function (req, file, cb) {
       cb(null, { fieldName: file.fieldname })
@@ -36,7 +36,7 @@ export const upload = multer({
       cb(null, true)
     } else {
       const error = new Error('Only image files are allowed!')
-      cb(error as any, false)
+      cb(error, false)
     }
   }
 })

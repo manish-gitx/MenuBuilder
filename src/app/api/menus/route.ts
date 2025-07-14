@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { createMenuSchema, menuQuerySchema } from '@/lib/validations'
 import { successResponse, paginatedResponse, handleError, generateShareToken } from '@/lib/utils'
+import { Prisma } from '@prisma/client'
 
 // GET /api/menus - Get all menus with pagination and filtering
 export async function GET(request: NextRequest) {
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
     
     const validatedQuery = menuQuerySchema.parse(queryParams)
     
-    const where: any = {
+    const where: Prisma.MenuWhereInput = {
       userId: userId // Only show menus created by the current user
     }
     

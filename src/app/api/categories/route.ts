@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { createCategorySchema, categoryQuerySchema } from '@/lib/validations'
 import { successResponse, paginatedResponse, errorResponse, handleError, formatCategoryResponse, defaultCategoryInclude, validateCategoryCanAcceptSubcategories } from '@/lib/utils'
+import { Prisma } from '@prisma/client'
 
 // GET /api/categories - Get categories with hierarchical structure
 export async function GET(request: NextRequest) {
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
       return errorResponse('Menu not found or unauthorized', 404)
     }
     
-    const where: any = {
+    const where: Prisma.CategoryWhereInput = {
       menuId: validatedQuery.menuId
     }
     
