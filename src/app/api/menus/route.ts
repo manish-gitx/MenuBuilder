@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
     
     const validatedQuery = menuQuerySchema.parse(queryParams)
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: Record<string, any> = {
       userId: userId // Only show menus created by the current user
     }

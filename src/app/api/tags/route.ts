@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
     
     const validatedQuery = tagQuerySchema.parse(queryParams)
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: Record<string, any> = {}
     
     if (validatedQuery.type) {
