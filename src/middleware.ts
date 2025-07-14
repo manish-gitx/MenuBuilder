@@ -1,6 +1,33 @@
-import { clerkMiddleware } from '@clerk/nextjs/server';
 
-export default clerkMiddleware();
+
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+
+// Define protected API routes that require authentication
+const isProtectedRoute = createRouteMatcher([
+  '/api/menus(.*)',
+  '/api/categories(.*)',
+  '/api/menu-items(.*)',
+  '/api/tags' // POST /api/tags requires auth, GET is public
+]);
+
+// Define public routes that don't require authentication
+const isPublicRoute = createRouteMatcher([
+  '/api/health',
+  '/api/menus/share/(.*)', // Public menu sharing
+  '/api/tags' // GET tags is public (POST will be handled by individual route)
+]);
+
+export default clerkMiddleware((auth, req) => {
+  // Allow public routes to pass through
+  if (isPublicRoute(req)) {
+    return;
+  }
+  
+  // Protect API routes that require authentication
+  if (isProtectedRoute(req)) {
+    auth().protect();
+  }
+});
 
 export const config = {
   matcher: [
