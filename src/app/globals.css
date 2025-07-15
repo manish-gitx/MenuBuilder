@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
 
 @theme {
   /* Warm, inviting catering brand colors - space-separated HSL format for Tailwind v4 */
