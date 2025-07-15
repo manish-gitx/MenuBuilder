@@ -174,7 +174,18 @@ export const defaultCategoryInclude = {
             }
           }
         }
+      },
+      _count: {
+        select: {
+          menuItems: true
+        }
       }
+    }
+  },
+  _count: {
+    select: {
+      menuItems: true,
+      childCategories: true
     }
   }
 }

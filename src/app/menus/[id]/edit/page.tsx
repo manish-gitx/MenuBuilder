@@ -1,23 +1,82 @@
 "use client"
 
 import React, { useEffect, useState } from "react";
-import { Category, categoryApi, Menu, menuApi} from "@/lib/api";
-import { ChevronDown, ChevronUp, EllipsisVertical, Menu as MenuIcon, Plus, Search } from "lucide-react";
+import { Category, categoryApi, Menu, menuApi, MenuItem, menuItemApi} from "@/lib/api";
+import { ChevronDown, ChevronUp, EllipsisVertical, Menu as MenuIcon, Plus, Search, GripVertical, Pencil, Trash2 } from "lucide-react";
 import { Image as ImageIcon } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
 import { toast } from "@/components/ui/Toast";
+import { MenuItemCard } from "@/components/ui/MenuItemCard";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
+  DragOverlay,
+  Active,
+  Over,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = React.use(params)
   const [categories, setCategories] = useState<Category[] | null>(null)
   const [menu,setMenu]=useState<Menu | null>(null)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [isAddSubCategoryModalOpen, setIsAddSubCategoryModalOpen] = useState(false)
+  const [isAddMenuItemModalOpen, setIsAddMenuItemModalOpen] = useState(false)
+  const [isEditMenuItemModalOpen, setIsEditMenuItemModalOpen] = useState(false)
+  const [isEditCategoryModalOpen, setIsEditCategoryModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
+  const [selectedMenuItem, setSelectedMenuItem] = useState<MenuItem | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
+  const [activeId, setActiveId] = useState<string | null>(null)
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
   const [formData, setFormData] = useState({
+    name: "",
+    description: ""
+  })
+  const [subCategoryFormData, setSubCategoryFormData] = useState({
+    name: "",
+    description: ""
+  })
+  const [menuItemFormData, setMenuItemFormData] = useState({
+    name: "",
+    description: "",
+    ingredients: "",
+    selectedSubCategoryId: ""
+  })
+  const [editMenuItemFormData, setEditMenuItemFormData] = useState({
+    name: "",
+    description: "",
+    ingredients: ""
+  })
+  const [editCategoryFormData, setEditCategoryFormData] = useState({
     name: "",
     description: ""
   })
@@ -27,6 +86,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
       try {
         const response = await categoryApi.getCategories({
           menuId: menuId,
+          includeItems: true,
         })
         setCategories(response.data)
         console.log(response.data)
@@ -107,9 +167,573 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
       return newSet
     })
   }
-  
+
+  const handleEditMenuItem = (item: MenuItem) => {
+    setSelectedMenuItem(item)
+    setEditMenuItemFormData({
+      name: item.name,
+      description: item.description || "",
+      ingredients: item.ingredients || ""
+    })
+    setIsEditMenuItemModalOpen(true)
+  }
+
+  const handleImageUpload = (item: MenuItem) => {
+    // TODO: Implement image upload functionality
+    console.log('Upload image for:', item)
+  }
+
+  const handleEditCategory = (category: Category) => {
+    setSelectedCategory(category)
+    setEditCategoryFormData({
+      name: category.name,
+      description: category.description || ""
+    })
+    setIsEditCategoryModalOpen(true)
+  }
+
+  const handleDeleteCategory = async (category: Category) => {
+    if (!confirm(`Are you sure you want to delete "${category.name}"? This will also delete all sub-categories and menu items within it. This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      await categoryApi.deleteCategory(category.id)
+      toast.success("Category deleted successfully!")
+      
+      // Refresh categories list
+      const updatedCategories = await categoryApi.getCategories({
+        menuId: resolvedParams.id,
+        includeItems: true,
+      })
+      setCategories(updatedCategories.data)
+      
+    } catch (error) {
+      console.error('Failed to delete category:', error)
+      toast.error("Failed to delete category. Please try again.")
+    }
+  }
+
+  const handleDeleteSubCategory = async (subCategory: Category) => {
+    if (!confirm(`Are you sure you want to delete "${subCategory.name}"? This will also delete all menu items within it. This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      await categoryApi.deleteCategory(subCategory.id)
+      toast.success("Sub-category deleted successfully!")
+      
+      // Refresh categories list
+      const updatedCategories = await categoryApi.getCategories({
+        menuId: resolvedParams.id,
+        includeItems: true,
+      })
+      setCategories(updatedCategories.data)
+      
+    } catch (error) {
+      console.error('Failed to delete sub-category:', error)
+      toast.error("Failed to delete sub-category. Please try again.")
+    }
+  }
+
+  const handleDeleteMenuItem = async (item: MenuItem) => {
+    if (!confirm(`Are you sure you want to delete "${item.name}"? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      await menuItemApi.deleteMenuItem(item.id)
+      toast.success("Menu item deleted successfully!")
+      
+      // Refresh categories list
+      const updatedCategories = await categoryApi.getCategories({
+        menuId: resolvedParams.id,
+        includeItems: true,
+      })
+      setCategories(updatedCategories.data)
+      
+    } catch (error) {
+      console.error('Failed to delete menu item:', error)
+      toast.error("Failed to delete menu item. Please try again.")
+    }
+  }
+
+  const handleAddSubCategory = (categoryId: string) => {
+    setSelectedCategoryId(categoryId)
+    setIsAddSubCategoryModalOpen(true)
+  }
+
+  const handleAddMenuItem = (categoryId: string) => {
+    setSelectedCategoryId(categoryId)
+    const category = categories?.find(cat => cat.id === categoryId)
+    
+    // If category has sub-categories, reset the selectedSubCategoryId so user can choose
+    if (category?.childCategories && category.childCategories.length > 0) {
+      setMenuItemFormData(prev => ({ ...prev, selectedSubCategoryId: "" }))
+    } else {
+      // If no sub-categories, we'll add directly to the main category
+      setMenuItemFormData(prev => ({ ...prev, selectedSubCategoryId: categoryId }))
+    }
+    
+    setIsAddMenuItemModalOpen(true)
+  }
+
+  const handleCreateSubCategory = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!subCategoryFormData.name.trim() || !selectedCategoryId) {
+      toast.error("Sub-category name is required")
+      return
+    }
+
+    setIsLoading(true)
+    
+    try {
+      await categoryApi.createCategory({
+        menuId: resolvedParams.id,
+        name: subCategoryFormData.name.trim(),
+        description: subCategoryFormData.description.trim() || undefined,
+        parentCategoryId: selectedCategoryId,
+      })
+      
+      toast.success("Sub-category created successfully!")
+      
+      // Refresh categories list
+      const updatedCategories = await categoryApi.getCategories({
+        menuId: resolvedParams.id,
+        includeItems: true,
+      })
+      setCategories(updatedCategories.data)
+      
+      // Reset form and close modal
+      setSubCategoryFormData({ name: "", description: "" })
+      setIsAddSubCategoryModalOpen(false)
+      setSelectedCategoryId(null)
+      
+    } catch (error) {
+      console.error('Failed to create sub-category:', error)
+      toast.error("Failed to create sub-category. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleCreateMenuItem = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!menuItemFormData.name.trim()) {
+      toast.error("Menu item name is required")
+      return
+    }
+
+    // Determine which category to add the item to
+    const selectedCategory = categories?.find(cat => cat.id === selectedCategoryId)
+    const targetCategoryId = selectedCategory?.childCategories && selectedCategory.childCategories.length > 0 
+      ? menuItemFormData.selectedSubCategoryId 
+      : selectedCategoryId
+
+    if (!targetCategoryId) {
+      toast.error("Please select a sub-category")
+      return
+    }
+
+    setIsLoading(true)
+    
+    try {
+      await menuItemApi.createMenuItem({
+        categoryId: targetCategoryId,
+        name: menuItemFormData.name.trim(),
+        description: menuItemFormData.description.trim() || undefined,
+        ingredients: menuItemFormData.ingredients.trim() || undefined,
+      })
+      
+      toast.success("Menu item created successfully!")
+      
+      // Refresh categories list
+      const updatedCategories = await categoryApi.getCategories({
+        menuId: resolvedParams.id,
+        includeItems: true,
+      })
+      setCategories(updatedCategories.data)
+      
+      // Reset form and close modal
+      setMenuItemFormData({ name: "", description: "", ingredients: "", selectedSubCategoryId: "" })
+      setIsAddMenuItemModalOpen(false)
+      setSelectedCategoryId(null)
+      
+    } catch (error) {
+      console.error('Failed to create menu item:', error)
+      toast.error("Failed to create menu item. Please try again.")
+        } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleUpdateMenuItem = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!editMenuItemFormData.name.trim() || !selectedMenuItem) {
+      toast.error("Menu item name is required")
+      return
+    }
+
+    setIsLoading(true)
+    
+    try {
+      await menuItemApi.updateMenuItem(selectedMenuItem.id, {
+        name: editMenuItemFormData.name.trim(),
+        description: editMenuItemFormData.description.trim() || undefined,
+        ingredients: editMenuItemFormData.ingredients.trim() || undefined,
+      })
+      
+      toast.success("Menu item updated successfully!")
+      
+      // Refresh categories list
+      const updatedCategories = await categoryApi.getCategories({
+        menuId: resolvedParams.id,
+        includeItems: true,
+      })
+      setCategories(updatedCategories.data)
+      
+      // Reset form and close modal
+      setEditMenuItemFormData({ name: "", description: "", ingredients: "" })
+      setIsEditMenuItemModalOpen(false)
+      setSelectedMenuItem(null)
+      
+    } catch (error) {
+      console.error('Failed to update menu item:', error)
+      toast.error("Failed to update menu item. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleUpdateCategory = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!editCategoryFormData.name.trim() || !selectedCategory) {
+      toast.error("Category name is required")
+      return
+    }
+
+    setIsLoading(true)
+    
+    try {
+      await categoryApi.updateCategory(selectedCategory.id, {
+        name: editCategoryFormData.name.trim(),
+        description: editCategoryFormData.description.trim() || undefined,
+      })
+      
+      toast.success("Category updated successfully!")
+      
+      // Refresh categories list
+      const updatedCategories = await categoryApi.getCategories({
+        menuId: resolvedParams.id,
+        includeItems: true,
+      })
+      setCategories(updatedCategories.data)
+      
+      // Reset form and close modal
+      setEditCategoryFormData({ name: "", description: "" })
+      setIsEditCategoryModalOpen(false)
+      setSelectedCategory(null)
+      
+    } catch (error) {
+      console.error('Failed to update category:', error)
+      toast.error("Failed to update category. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string)
+  }
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    setActiveId(null)
+
+    if (!over || active.id === over.id) {
+      return
+    }
+
+    const activeId = active.id as string
+    const overId = over.id as string
+
+    // Handle category reordering
+    if (activeId.startsWith('category-') && overId.startsWith('category-')) {
+      const activeIndex = categories?.findIndex(cat => `category-${cat.id}` === activeId) ?? -1
+      const overIndex = categories?.findIndex(cat => `category-${cat.id}` === overId) ?? -1
+      
+      if (activeIndex !== -1 && overIndex !== -1 && categories) {
+        const newCategories = arrayMove(categories, activeIndex, overIndex)
+        setCategories(newCategories)
+        
+        // Update sortOrder in the backend
+        updateCategorySortOrder(newCategories)
+      }
+    }
+
+    // Handle menu item reordering within the same category
+    if (activeId.startsWith('item-') && overId.startsWith('item-')) {
+      // Find the category containing these items
+      const activeCategory = categories?.find(cat => 
+        cat.menuItems?.some(item => `item-${item.id}` === activeId) ||
+        cat.childCategories?.some(subCat => subCat.menuItems?.some(item => `item-${item.id}` === activeId))
+      )
+      
+      if (activeCategory) {
+        // Handle reordering within the same category or sub-category
+        const updatedCategories = categories?.map(cat => {
+          if (cat.id === activeCategory.id) {
+            // Check if items are in direct menu items
+            if (cat.menuItems?.some(item => `item-${item.id}` === activeId)) {
+              const activeIndex = cat.menuItems.findIndex(item => `item-${item.id}` === activeId)
+              const overIndex = cat.menuItems.findIndex(item => `item-${item.id}` === overId)
+              
+              if (activeIndex !== -1 && overIndex !== -1) {
+                const newItems = arrayMove(cat.menuItems, activeIndex, overIndex)
+                updateMenuItemSortOrder(newItems)
+                return { ...cat, menuItems: newItems }
+              }
+            }
+            
+            // Check if items are in sub-categories
+            const updatedChildCategories = cat.childCategories?.map(subCat => {
+              if (subCat.menuItems?.some(item => `item-${item.id}` === activeId)) {
+                const activeIndex = subCat.menuItems.findIndex(item => `item-${item.id}` === activeId)
+                const overIndex = subCat.menuItems.findIndex(item => `item-${item.id}` === overId)
+                
+                if (activeIndex !== -1 && overIndex !== -1) {
+                  const newItems = arrayMove(subCat.menuItems, activeIndex, overIndex)
+                  updateMenuItemSortOrder(newItems)
+                  return { ...subCat, menuItems: newItems }
+                }
+              }
+              return subCat
+            })
+            
+            return { ...cat, childCategories: updatedChildCategories }
+          }
+          return cat
+        })
+        
+        setCategories(updatedCategories || [])
+      }
+    }
+  }
+
+  const updateCategorySortOrder = async (categories: Category[]) => {
+    try {
+      const updatePromises = categories.map((category, index) =>
+        categoryApi.updateCategory(category.id, { sortOrder: index })
+      )
+      await Promise.all(updatePromises)
+    } catch (error) {
+      console.error('Failed to update category sort order:', error)
+      toast.error('Failed to update category order')
+    }
+  }
+
+  const updateMenuItemSortOrder = async (menuItems: MenuItem[]) => {
+    try {
+      const updatePromises = menuItems.map((item, index) =>
+        menuItemApi.updateMenuItem(item.id, { sortOrder: index })
+      )
+      await Promise.all(updatePromises)
+    } catch (error) {
+      console.error('Failed to update menu item sort order:', error)
+      toast.error('Failed to update menu item order')
+    }
+  }
+   
+  // Sortable Category Component
+  const SortableCategory = ({ category }: { category: Category }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id: `category-${category.id}` })
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+    }
+
+    const isExpanded = expandedCategories.has(category.id)
+    const hasSubcategories = category.childCategories && category.childCategories.length > 0
+    const hasDirectItems = category.menuItems && category.menuItems.length > 0
+
+    return (
+      <div ref={setNodeRef} style={style}>
+        <div>
+          {/* Main Category Header */}
+          <div className="flex flex-col px-6 py-4 gap-4 relative">
+            {/* Red border for every category */}
+            <div className="bg-red-500 w-1 h-6 rounded-tr-lg rounded-br-lg absolute top-5 left-0"></div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div
+                  className="cursor-grab hover:cursor-grabbing"
+                  {...attributes}
+                  {...listeners}
+                >
+                  <GripVertical className="w-4 h-4 text-white" />
+                </div>
+                <span className="text-white text-sm font-bold tracking-wide">
+                  {category.name} ({(category._count?.menuItems || 0) + (category.childCategories?.reduce((sum, child) => sum + (child._count?.menuItems || 0), 0) || 0)})
+                </span>
+              </div>
+
+                             {/* Action buttons */}
+               <div className="flex flex-row gap-2">
+                 <button 
+                   onClick={() => handleEditCategory(category)}
+                   className="text-white hover:text-gray-300 transition-colors"
+                 >
+                   <Pencil className="w-4 h-4" />
+                 </button>
+                 <button 
+                   onClick={() => handleDeleteCategory(category)}
+                   className="text-red-400 hover:text-red-300 transition-colors"
+                 >
+                   <Trash2 className="w-4 h-4" />
+                 </button>
+                 <button 
+                   onClick={() => toggleCategory(category.id)}
+                   className="text-white hover:text-gray-300 transition-colors"
+                 >
+                  {isExpanded ? (
+                    <ChevronUp className="w-4 h-4" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Show content when expanded */}
+            {isExpanded && (
+              <div>
+                <div className="border-b-1 border-slate-300 mb-4"></div>
+                
+                {/* Sub-categories */}
+                {hasSubcategories && (
+                  <div className="space-y-4 mb-4">
+                                         {category.childCategories?.map((subCategory) => (
+                       <div key={subCategory.id} className="pl-4">
+                         <div className="flex items-center justify-between mb-3">
+                           <div className="text-white text-sm font-bold tracking-wide">
+                             {subCategory.name.split('').join(' ').toUpperCase()} ({subCategory._count?.menuItems || 0})
+                           </div>
+                           <div className="flex gap-2">
+                             <button 
+                               onClick={() => handleDeleteSubCategory(subCategory)}
+                               className="text-red-400 hover:text-red-300 transition-colors"
+                             >
+                               <Trash2 className="w-3 h-3" />
+                             </button>
+                           </div>
+                         </div>
+                        
+                        {/* Menu items in sub-category */}
+                        {subCategory.menuItems && subCategory.menuItems.length > 0 && (
+                          <SortableContext items={subCategory.menuItems.map(item => `item-${item.id}`)} strategy={verticalListSortingStrategy}>
+                            <div className="grid grid-cols-1 gap-3">
+                              {subCategory.menuItems.map((item) => (
+                                <SortableMenuItem key={item.id} item={item} />
+                              ))}
+                            </div>
+                          </SortableContext>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Direct menu items (if no sub-categories) */}
+                {hasDirectItems && !hasSubcategories && (
+                  <SortableContext items={category.menuItems?.map(item => `item-${item.id}`) || []} strategy={verticalListSortingStrategy}>
+                    <div className="grid grid-cols-1 gap-3 mb-4">
+                      {category.menuItems?.map((item) => (
+                        <SortableMenuItem key={item.id} item={item} />
+                      ))}
+                    </div>
+                  </SortableContext>
+                )}
+                
+                {/* Action buttons */}
+                <div className="grid grid-cols-2 gap-2 mt-4 justify-center overflow-hidden">
+                  <button 
+                    onClick={() => handleAddSubCategory(category.id)}
+                    className="bg-white hover:bg-gray-100 text-black px-3 py-1 rounded text-sm font-medium transition-colors w-full"
+                  >
+                    + Add-sub-category
+                  </button>
+                  <button 
+                    onClick={() => handleAddMenuItem(category.id)}
+                    className="bg-white hover:bg-gray-100 text-black px-3 py-1 rounded text-sm font-medium transition-colors w-full"
+                  >
+                    + Add item
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Divider */}
+          <div className="h-2 bg-zinc-700"></div>
+        </div>
+      </div>
+    )
+  }
+
+  // Sortable MenuItem Component
+  const SortableMenuItem = ({ item }: { item: MenuItem }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id: `item-${item.id}` })
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+    }
+
+    return (
+      <div ref={setNodeRef} style={style} className="relative">
+        <div
+          className="absolute top-1/2 left-2 transform -translate-y-1/2 cursor-grab hover:cursor-grabbing z-10"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="w-4 h-4 text-white" />
+        </div>
+        <div className="pl-8">
+          <MenuItemCard 
+            item={item} 
+            onEdit={handleEditMenuItem}
+            onDelete={handleDeleteMenuItem}
+            onImageUpload={handleImageUpload}
+          />
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="bg-zinc-950  w-screen h-screen dark static">
+    <div className="bg-[#1E1E1E] w-screen h-screen dark static">
 
       <header className="flex flex-col gap-3 p-2 border-b-1 border-slate-300">
         <div className="flex justify-between">
@@ -128,68 +752,26 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
       </header>
 
       {/* Category main div */}
-      <div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div>
   {categories === null ? (
     <div className="text-white text-center py-8">Loading categories...</div>
   ) : categories.length === 0 ? (
     <div className="text-white text-center py-8">No categories found</div>
   ) : (
-    categories.map((category) => {
-      const isExpanded = expandedCategories.has(category.id)
-      return (
-        <div key={category.id}>
-          <div className="flex flex-col px-6 py-4 gap-4 relative">
-            {/* Red border for every category */}
-            <div className="bg-red-500 w-1 h-6 rounded-tr-lg rounded-br-lg absolute top-5 left-0"></div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-white text-sm font-bold tracking-wide">
-                {category.name} ({category._count?.menuItems || 0})
-              </span>
-
-              {/* Chevron with click handler */}
-              <div className="flex flex-row gap-2">
-                <EllipsisVertical className="text-white w-4 h-4" />
-                <button 
-                  onClick={() => toggleCategory(category.id)}
-                  className="text-white hover:text-gray-300 transition-colors"
-                >
-                  {isExpanded ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Show buttons when expanded */}
-            {isExpanded && (
-<div>
-  <div className="border-b-1 border-slate-300 mb-4">
-    </div>
-              
-              <div className="grid grid-cols-2 gap-2 mt-2 justify-center  overflow-hidden">
-                <button className="bg-white hover:bg-gray-100 text-black px-3 py-1 rounded text-sm font-medium transition-colors w-full">
-                  + Add-sub-category
-                </button>
-                <button className="bg-white hover:bg-gray-100 text-black px-3 py-1 rounded text-sm font-medium transition-colors w-full">
-                  + Add item
-                </button>
-              </div>
-              </div>
-            )}
-          </div>
-
-          {/* Divider */}
-          <div className="h-2 bg-zinc-700"></div>
-        </div>
-      )
-    })
+    <SortableContext items={categories.map(cat => `category-${cat.id}`)} strategy={verticalListSortingStrategy}>
+      {categories.map((category) => (
+        <SortableCategory key={category.id} category={category} />
+      ))}
+    </SortableContext>
   )}
 </div>
-
-
+      </DndContext>
 
       <div className="absolute bottom-3 right-3">
         <div className="flex flex-col gap-3">
@@ -246,6 +828,220 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
               isLoading={isLoading}
             >
               Create Category
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Add Sub-Category Modal */}
+      <Modal
+        isOpen={isAddSubCategoryModalOpen}
+        onClose={() => setIsAddSubCategoryModalOpen(false)}
+        title="Add New Sub-Category"
+        size="md"
+      >
+        <form onSubmit={handleCreateSubCategory} className="space-y-4">
+          <Input
+            label="Sub-Category Name"
+            placeholder="Enter sub-category name"
+            value={subCategoryFormData.name}
+            onChange={(e) => setSubCategoryFormData(prev => ({ ...prev, name: e.target.value }))}
+            required
+          />
+          
+          <Textarea
+            label="Description (Optional)"
+            placeholder="Enter sub-category description"
+            value={subCategoryFormData.description}
+            onChange={(e) => setSubCategoryFormData(prev => ({ ...prev, description: e.target.value }))}
+            rows={3}
+          />
+          
+          <div className="flex gap-3 justify-end pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsAddSubCategoryModalOpen(false)}
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-black text-white" 
+              variant="primary"
+              isLoading={isLoading}
+            >
+              Create Sub-Category
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Add Menu Item Modal */}
+      <Modal
+        isOpen={isAddMenuItemModalOpen}
+        onClose={() => setIsAddMenuItemModalOpen(false)}
+        title="Add New Menu Item"
+        size="md"
+      >
+        <form onSubmit={handleCreateMenuItem} className="space-y-4">
+          {/* Sub-category dropdown - only show if selected category has sub-categories */}
+          {selectedCategoryId && categories?.find(cat => cat.id === selectedCategoryId)?.childCategories && categories.find(cat => cat.id === selectedCategoryId)!.childCategories!.length > 0 && (
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-foreground">
+                Select Sub-Category *
+              </label>
+              <select
+                value={menuItemFormData.selectedSubCategoryId}
+                onChange={(e) => setMenuItemFormData(prev => ({ ...prev, selectedSubCategoryId: e.target.value }))}
+                className="w-full h-10 px-3 py-2 text-sm text-foreground bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                required
+              >
+                <option value="">Choose a sub-category...</option>
+                {categories.find(cat => cat.id === selectedCategoryId)?.childCategories?.map(subCat => (
+                  <option key={subCat.id} value={subCat.id}>
+                    {subCat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <Input
+            label="Menu Item Name"
+            placeholder="Enter menu item name"
+            value={menuItemFormData.name}
+            onChange={(e) => setMenuItemFormData(prev => ({ ...prev, name: e.target.value }))}
+            required
+          />
+          
+          <Textarea
+            label="Description (Optional)"
+            placeholder="Enter menu item description"
+            value={menuItemFormData.description}
+            onChange={(e) => setMenuItemFormData(prev => ({ ...prev, description: e.target.value }))}
+            rows={3}
+          />
+
+          <Textarea
+            label="Ingredients (Optional)"
+            placeholder="Enter ingredients"
+            value={menuItemFormData.ingredients}
+            onChange={(e) => setMenuItemFormData(prev => ({ ...prev, ingredients: e.target.value }))}
+            rows={3}
+          />
+          
+          <div className="flex gap-3 justify-end pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsAddMenuItemModalOpen(false)}
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-black text-white" 
+              variant="primary"
+              isLoading={isLoading}
+            >
+              Create Menu Item
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Edit Menu Item Modal */}
+      <Modal
+        isOpen={isEditMenuItemModalOpen}
+        onClose={() => setIsEditMenuItemModalOpen(false)}
+        title="Edit Menu Item"
+        size="md"
+      >
+        <form onSubmit={handleUpdateMenuItem} className="space-y-4">
+          <Input
+            label="Menu Item Name"
+            placeholder="Enter menu item name"
+            value={editMenuItemFormData.name}
+            onChange={(e) => setEditMenuItemFormData(prev => ({ ...prev, name: e.target.value }))}
+            required
+          />
+          
+          <Textarea
+            label="Description (Optional)"
+            placeholder="Enter menu item description"
+            value={editMenuItemFormData.description}
+            onChange={(e) => setEditMenuItemFormData(prev => ({ ...prev, description: e.target.value }))}
+            rows={3}
+          />
+
+          <Textarea
+            label="Ingredients (Optional)"
+            placeholder="Enter ingredients"
+            value={editMenuItemFormData.ingredients}
+            onChange={(e) => setEditMenuItemFormData(prev => ({ ...prev, ingredients: e.target.value }))}
+            rows={3}
+          />
+          
+          <div className="flex gap-3 justify-end pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsEditMenuItemModalOpen(false)}
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-black text-white" 
+              variant="primary"
+              isLoading={isLoading}
+            >
+              Update Menu Item
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Edit Category Modal */}
+      <Modal
+        isOpen={isEditCategoryModalOpen}
+        onClose={() => setIsEditCategoryModalOpen(false)}
+        title="Edit Category"
+        size="md"
+      >
+        <form onSubmit={handleUpdateCategory} className="space-y-4">
+          <Input
+            label="Category Name"
+            placeholder="Enter category name"
+            value={editCategoryFormData.name}
+            onChange={(e) => setEditCategoryFormData(prev => ({ ...prev, name: e.target.value }))}
+            required
+          />
+          
+          <Textarea
+            label="Description (Optional)"
+            placeholder="Enter category description"
+            value={editCategoryFormData.description}
+            onChange={(e) => setEditCategoryFormData(prev => ({ ...prev, description: e.target.value }))}
+            rows={3}
+          />
+          
+          <div className="flex gap-3 justify-end pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsEditCategoryModalOpen(false)}
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-black text-white" 
+              variant="primary"
+              isLoading={isLoading}
+            >
+              Update Category
             </Button>
           </div>
         </form>

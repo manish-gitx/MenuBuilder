@@ -55,6 +55,17 @@ export async function GET(request: NextRequest) {
         include: validatedQuery.includeItems ? defaultCategoryInclude : {
           childCategories: {
             include: {
+              childCategories: true,
+              _count: {
+                select: {
+                  menuItems: true
+                }
+              }
+            }
+          },
+          _count: {
+            select: {
+              menuItems: true,
               childCategories: true
             }
           }
