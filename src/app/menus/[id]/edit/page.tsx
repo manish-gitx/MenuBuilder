@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Category, categoryApi, Menu, menuApi} from "@/lib/api";
 import { ChevronDown, ChevronUp, EllipsisVertical, Menu as MenuIcon, Plus, Search } from "lucide-react";
-import { Image } from "lucide-react";
+import { Image as ImageIcon } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
@@ -117,7 +117,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
       
           <div className="flex gap-4">
             <Search className="w-6 h-6  text-sky-50" />
-            <Image className="w-6 h-6 text-sky-50" />
+            <ImageIcon className="w-6 h-6 text-sky-50" />
           </div>
         </div>
 

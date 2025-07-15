@@ -4,9 +4,10 @@ import { updateTagSchema, uuidSchema } from '@/lib/validations'
 import { successResponse, errorResponse, handleError } from '@/lib/utils'
 
 // GET /api/tags/[id] - Get a specific tag
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const tagId = uuidSchema.parse(params.id)
+    const { id } = await params
+    const tagId = uuidSchema.parse(id)
     
     const tag = await prisma.tag.findUnique({
       where: { id: tagId },
@@ -36,9 +37,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 // PUT /api/tags/[id] - Update a specific tag
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const tagId = uuidSchema.parse(params.id)
+    const { id } = await params
+    const tagId = uuidSchema.parse(id)
     const body = await request.json()
     const validatedData = updateTagSchema.parse(body)
     
@@ -71,9 +73,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 // DELETE /api/tags/[id] - Delete a specific tag
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const tagId = uuidSchema.parse(params.id)
+    const { id } = await params
+    const tagId = uuidSchema.parse(id)
     
     // Check if tag exists
     const existingTag = await prisma.tag.findUnique({

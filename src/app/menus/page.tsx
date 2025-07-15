@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth, UserButton } from "@clerk/nextjs"
 import { Button } from '@/components/ui/Button'
@@ -36,9 +36,7 @@ export default function Dashboard() {
   }, [isLoaded, userId, router])
 
   // Load menus
-  const loadMenus = async () => {
-    if (!userId) return
-    
+  const loadMenus = useCallback(async () => {
     try {
       setLoading(true)
       const response = await menuApi.getMenus({
@@ -53,13 +51,13 @@ export default function Dashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [searchQuery, filterPublic])
 
   useEffect(() => {
     if (userId) {
       loadMenus()
     }
-  }, [searchQuery, filterPublic, userId])
+  }, [searchQuery, filterPublic, userId, loadMenus])
 
   const handleEditMenu = (menu: Menu) => {
     router.push(`/menus/${menu.id}/edit`)

@@ -5,7 +5,7 @@ import { updateCategorySchema, uuidSchema } from '@/lib/validations'
 import { successResponse, errorResponse, handleError, formatCategoryResponse, defaultCategoryInclude } from '@/lib/utils'
 
 // GET /api/categories/[id] - Get a specific category with all its data
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { userId } = await auth()
     
@@ -15,8 +15,9 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         headers: { 'Content-Type': 'application/json' }
       })
     }
+    const {id}=await params;
     
-    const categoryId = uuidSchema.parse(params.id)
+    const categoryId = uuidSchema.parse(id)
     
     const category = await prisma.category.findUnique({
       where: { id: categoryId },
@@ -46,9 +47,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 // PUT /api/categories/[id] - Update a specific category
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const categoryId = uuidSchema.parse(params.id)
+    const { id } = await params
+    const categoryId = uuidSchema.parse(id)
     const body = await request.json()
     const validatedData = updateCategorySchema.parse(body)
     
@@ -74,9 +76,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 // DELETE /api/categories/[id] - Delete a specific category
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const categoryId = uuidSchema.parse(params.id)
+    const { id } = await params
+    const categoryId = uuidSchema.parse(id)
     
     // Check if category exists
     const existingCategory = await prisma.category.findUnique({
