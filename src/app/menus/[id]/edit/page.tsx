@@ -1,8 +1,8 @@
 "use client"
 
 import React, { useEffect, useState } from "react";
-import { Category, categoryApi, Menu, menuApi, MenuItem, menuItemApi} from "@/lib/api";
-import { ChevronDown, ChevronUp, EllipsisVertical, Menu as MenuIcon, Plus, Search, GripVertical, Pencil, Trash2 } from "lucide-react";
+import { Category, categoryApi, Menu, menuApi, MenuItem, menuItemApi, Tag, tagApi} from "@/lib/api";
+import { ChevronDown, ChevronUp, EllipsisVertical, Menu as MenuIcon, Plus, Search, GripVertical, Pencil, Trash2, X } from "lucide-react";
 import { Image as ImageIcon } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
@@ -40,6 +40,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = React.use(params)
   const [categories, setCategories] = useState<Category[] | null>(null)
   const [menu,setMenu]=useState<Menu | null>(null)
+  const [tags, setTags] = useState<Tag[]>([])
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isAddSubCategoryModalOpen, setIsAddSubCategoryModalOpen] = useState(false)
   const [isAddMenuItemModalOpen, setIsAddMenuItemModalOpen] = useState(false)
@@ -60,8 +61,8 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 200,
-        tolerance: 5,
+        delay: 250,
+        tolerance: 8,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -79,13 +80,13 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const [menuItemFormData, setMenuItemFormData] = useState({
     name: "",
     description: "",
-    ingredients: "",
-    selectedSubCategoryId: ""
+    selectedSubCategoryId: "",
+    selectedTags: [] as string[]
   })
   const [editMenuItemFormData, setEditMenuItemFormData] = useState({
     name: "",
     description: "",
-    ingredients: ""
+    selectedTags: [] as string[]
   })
   const [editCategoryFormData, setEditCategoryFormData] = useState({
     name: "",
@@ -118,8 +119,23 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
       }
     }
 
+    const getTags = async () => {
+      try {
+        const response = await tagApi.getTags({ limit: 100 })
+        setTags(response.data)
+      } catch (error) {
+        console.error('Failed to fetch tags:', error)
+      }
+    }
+
     getCategories(resolvedParams.id)
     getCurrentMenu(resolvedParams.id)
+    getTags()
+    
+    // Cleanup function to remove dragging class on unmount
+    return () => {
+      document.body.classList.remove('dragging')
+    }
   }, [resolvedParams.id])
 
   const handleCreateCategory = async (e: React.FormEvent) => {
@@ -184,7 +200,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     setEditMenuItemFormData({
       name: item.name,
       description: item.description || "",
-      ingredients: item.ingredients || ""
+      selectedTags: item.tags?.map(tag => tag.id) || []
     })
     setIsEditMenuItemModalOpen(true)
   }
@@ -280,10 +296,10 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     
     // If category has sub-categories, reset the selectedSubCategoryId so user can choose
     if (category?.childCategories && category.childCategories.length > 0) {
-      setMenuItemFormData(prev => ({ ...prev, selectedSubCategoryId: "" }))
+      setMenuItemFormData(prev => ({ ...prev, selectedSubCategoryId: "", selectedTags: [] }))
     } else {
       // If no sub-categories, we'll add directly to the main category
-      setMenuItemFormData(prev => ({ ...prev, selectedSubCategoryId: categoryId }))
+      setMenuItemFormData(prev => ({ ...prev, selectedSubCategoryId: categoryId, selectedTags: [] }))
     }
     
     setIsAddMenuItemModalOpen(true)
@@ -355,7 +371,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
         categoryId: targetCategoryId,
         name: menuItemFormData.name.trim(),
         description: menuItemFormData.description.trim() || undefined,
-        ingredients: menuItemFormData.ingredients.trim() || undefined,
+        tagIds: menuItemFormData.selectedTags.length > 0 ? menuItemFormData.selectedTags : undefined,
       })
       
       toast.success("Menu item created successfully!")
@@ -368,7 +384,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
       setCategories(updatedCategories.data)
       
       // Reset form and close modal
-      setMenuItemFormData({ name: "", description: "", ingredients: "", selectedSubCategoryId: "" })
+      setMenuItemFormData({ name: "", description: "", selectedSubCategoryId: "", selectedTags: [] })
       setIsAddMenuItemModalOpen(false)
       setSelectedCategoryId(null)
       
@@ -394,7 +410,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
       await menuItemApi.updateMenuItem(selectedMenuItem.id, {
         name: editMenuItemFormData.name.trim(),
         description: editMenuItemFormData.description.trim() || undefined,
-        ingredients: editMenuItemFormData.ingredients.trim() || undefined,
+        tagIds: editMenuItemFormData.selectedTags.length > 0 ? editMenuItemFormData.selectedTags : undefined,
       })
       
       toast.success("Menu item updated successfully!")
@@ -407,7 +423,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
       setCategories(updatedCategories.data)
       
       // Reset form and close modal
-      setEditMenuItemFormData({ name: "", description: "", ingredients: "" })
+      setEditMenuItemFormData({ name: "", description: "", selectedTags: [] })
       setIsEditMenuItemModalOpen(false)
       setSelectedMenuItem(null)
       
@@ -459,11 +475,15 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string)
+    // Add dragging class to body to prevent text selection
+    document.body.classList.add('dragging')
   }
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     setActiveId(null)
+    // Remove dragging class from body
+    document.body.classList.remove('dragging')
 
     if (!over || active.id === over.id) {
       return
@@ -484,6 +504,28 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
         // Update sortOrder in the backend
         updateCategorySortOrder(newCategories)
       }
+    }
+
+    // Handle sub-category reordering
+    if (activeId.startsWith('subcategory-') && overId.startsWith('subcategory-')) {
+      const activeSubId = activeId.replace('subcategory-', '')
+      const overSubId = overId.replace('subcategory-', '')
+      
+      const updatedCategories = categories?.map(cat => {
+        if (cat.childCategories?.some(sub => sub.id === activeSubId || sub.id === overSubId)) {
+          const activeIndex = cat.childCategories.findIndex(sub => sub.id === activeSubId)
+          const overIndex = cat.childCategories.findIndex(sub => sub.id === overSubId)
+          
+          if (activeIndex !== -1 && overIndex !== -1) {
+            const newSubCategories = arrayMove(cat.childCategories, activeIndex, overIndex)
+            updateCategorySortOrder(newSubCategories)
+            return { ...cat, childCategories: newSubCategories }
+          }
+        }
+        return cat
+      })
+      
+      setCategories(updatedCategories || [])
     }
 
     // Handle menu item reordering within the same category
@@ -592,7 +634,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
             <div className="flex items-center justify-between">
                              <div className="flex items-center gap-2">
                  <div
-                   className="cursor-grab hover:cursor-grabbing p-2 -m-2 touch-manipulation"
+                   className="drag-handle cursor-grab hover:cursor-grabbing p-2 -m-2 touch-manipulation"
                    {...attributes}
                    {...listeners}
                  >
@@ -638,34 +680,11 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
                 {/* Sub-categories */}
                 {hasSubcategories && (
                   <div className="space-y-4 mb-4">
-                                         {category.childCategories?.map((subCategory) => (
-                       <div key={subCategory.id} className="pl-4">
-                         <div className="flex items-center justify-between mb-3">
-                           <div className="text-white text-sm font-bold tracking-wide">
-                             {subCategory.name.split('').join(' ').toUpperCase()} ({subCategory._count?.menuItems || 0})
-                           </div>
-                           <div className="flex gap-2">
-                             <button 
-                               onClick={() => handleDeleteSubCategory(subCategory)}
-                               className="text-red-400 hover:text-red-300 transition-colors"
-                             >
-                               <Trash2 className="w-3 h-3" />
-                             </button>
-                           </div>
-                         </div>
-                        
-                        {/* Menu items in sub-category */}
-                        {subCategory.menuItems && subCategory.menuItems.length > 0 && (
-                          <SortableContext items={subCategory.menuItems.map(item => `item-${item.id}`)} strategy={verticalListSortingStrategy}>
-                            <div className="grid grid-cols-1 gap-3">
-                              {subCategory.menuItems.map((item) => (
-                                <SortableMenuItem key={item.id} item={item} />
-                              ))}
-                            </div>
-                          </SortableContext>
-                        )}
-                      </div>
-                    ))}
+                    <SortableContext items={category.childCategories?.map(sub => `subcategory-${sub.id}`) || []} strategy={verticalListSortingStrategy}>
+                      {category.childCategories?.map((subCategory) => (
+                        <SortableSubCategory key={subCategory.id} subCategory={subCategory} />
+                      ))}
+                    </SortableContext>
                   </div>
                 )}
 
@@ -706,6 +725,63 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     )
   }
 
+  // Sortable SubCategory Component
+  const SortableSubCategory = ({ subCategory }: { subCategory: Category }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id: `subcategory-${subCategory.id}` })
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.7 : 1,
+      zIndex: isDragging ? 1000 : 'auto',
+    }
+
+    return (
+      <div ref={setNodeRef} style={style} className=" sortable-item">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div
+              className="drag-handle cursor-grab hover:cursor-grabbing p-1 -m-1 touch-manipulation"
+              {...attributes}
+              {...listeners}
+            >
+              <GripVertical className="w-4 h-4 text-white" />
+            </div>
+            <div className="text-white text-sm font-bold tracking-wide">
+              {subCategory.name.split('').join(' ').toUpperCase()} ({subCategory._count?.menuItems || 0})
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => handleDeleteSubCategory(subCategory)}
+              className="text-red-400 hover:text-red-300 transition-colors"
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          </div>
+        </div>
+       
+        {/* Menu items in sub-category */}
+        {subCategory.menuItems && subCategory.menuItems.length > 0 && (
+          <SortableContext items={subCategory.menuItems.map(item => `item-${item.id}`)} strategy={verticalListSortingStrategy}>
+            <div className="grid grid-cols-1 gap-3">
+              {subCategory.menuItems.map((item) => (
+                <SortableMenuItem key={item.id} item={item} />
+              ))}
+            </div>
+          </SortableContext>
+        )}
+      </div>
+    )
+  }
+
   // Sortable MenuItem Component
   const SortableMenuItem = ({ item }: { item: MenuItem }) => {
     const {
@@ -727,26 +803,27 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     return (
       <div ref={setNodeRef} style={style} className="relative sortable-item">
         <div
-          className="absolute top-1/2 left-2 transform -translate-y-1/2 cursor-grab hover:cursor-grabbing z-10 p-2 -m-2 touch-manipulation"
+          className="drag-handle absolute top-10 left-2 transform -translate-y-1/2 cursor-grab hover:cursor-grabbing z-10 p-2 -m-2 touch-manipulation"
           {...attributes}
           {...listeners}
         >
           <GripVertical className="w-5 h-5 text-white" />
         </div>
-        <div className="pl-8">
+        <div className="pl-8 border-b-1 border-slate-300">
           <MenuItemCard 
             item={item} 
             onEdit={handleEditMenuItem}
             onDelete={handleDeleteMenuItem}
             onImageUpload={handleImageUpload}
           />
+
         </div>
       </div>
     )
   }
 
   return (
-    <div className="bg-[#1E1E1E] w-screen h-screen dark static">
+    <div className="bg-[#1E1E1E] min-h-screen w-full dark static select-none">
 
       <header className="flex flex-col gap-3 p-2 border-b-1 border-slate-300">
         <div className="flex justify-between">
@@ -770,8 +847,12 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+        onDragCancel={() => {
+          setActiveId(null)
+          document.body.classList.remove('dragging')
+        }}
       >
-        <div>
+        <div className="pb-32">
   {categories === null ? (
     <div className="text-white text-center py-8">Loading categories...</div>
   ) : categories.length === 0 ? (
@@ -786,17 +867,17 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
 </div>
       </DndContext>
 
-      <div className="absolute bottom-3 right-3">
+      <div className="fixed bottom-6 right-6 z-50">
         <div className="flex flex-col gap-3">
           <button 
             onClick={() => setIsAddModalOpen(true)}
-            className="bg-white rounded-md px-3 py-2 flex items-center gap-1 shadow border border-gray-200 hover:bg-gray-100 transition "
+            className="bg-white rounded-md px-3 py-2 flex items-center gap-1 shadow-lg border border-gray-200 hover:bg-gray-100 transition no-select touch-manipulation"
           >
             <Plus className="w-4 h-4 text-black" />
             <span className="text-black font-semibold">ADD</span>
           </button>
 
-          <button className="bg-black rounded-md px-3 py-2 flex items-center gap-1 shadow border border-gray-200 hover:bg-gray-100 transition">
+          <button className="bg-black rounded-md px-3 py-2 flex items-center gap-1 shadow-lg border border-gray-200 hover:bg-gray-100 transition no-select touch-manipulation">
             <MenuIcon className="w-4 h-4 text-sky-50" />
             <span className="text-sky-50 font-semibold">MENU</span>
           </button>
@@ -936,13 +1017,68 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
             rows={3}
           />
 
-          <Textarea
-            label="Ingredients (Optional)"
-            placeholder="Enter ingredients"
-            value={menuItemFormData.ingredients}
-            onChange={(e) => setMenuItemFormData(prev => ({ ...prev, ingredients: e.target.value }))}
-            rows={3}
-          />
+          {/* Tags Dropdown */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">
+              Tags (Optional)
+            </label>
+            <div className="relative">
+              <select
+                multiple
+                value={menuItemFormData.selectedTags}
+                onChange={(e) => {
+                  const selectedOptions = Array.from(e.target.selectedOptions, option => option.value)
+                  setMenuItemFormData(prev => ({ ...prev, selectedTags: selectedOptions }))
+                }}
+                className="w-full min-h-[120px] px-3 py-2 text-sm text-foreground bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                {tags.map(tag => (
+                  <option 
+                    key={tag.id} 
+                    value={tag.id}
+                    className="py-2 px-2"
+                  >
+                    {tag.icon ? `${tag.icon} ${tag.name}` : tag.name} ({tag.type})
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Hold Ctrl/Cmd to select multiple tags
+              </p>
+            </div>
+            
+            {/* Selected Tags Display */}
+            {menuItemFormData.selectedTags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                <span className="text-xs text-gray-500">Selected:</span>
+                {menuItemFormData.selectedTags.map(tagId => {
+                  const tag = tags.find(t => t.id === tagId)
+                  return tag ? (
+                    <span
+                      key={tagId}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium text-white"
+                      style={{ backgroundColor: tag.color }}
+                    >
+                      {tag.icon && <span>{tag.icon}</span>}
+                      {tag.name}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMenuItemFormData(prev => ({
+                            ...prev,
+                            selectedTags: prev.selectedTags.filter(id => id !== tagId)
+                          }))
+                        }}
+                        className="ml-1 text-white/70 hover:text-white"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ) : null
+                })}
+              </div>
+            )}
+          </div>
           
           <div className="flex gap-3 justify-end pt-4">
             <Button
@@ -988,13 +1124,68 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
             rows={3}
           />
 
-          <Textarea
-            label="Ingredients (Optional)"
-            placeholder="Enter ingredients"
-            value={editMenuItemFormData.ingredients}
-            onChange={(e) => setEditMenuItemFormData(prev => ({ ...prev, ingredients: e.target.value }))}
-            rows={3}
-          />
+          {/* Tags Dropdown */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">
+              Tags (Optional)
+            </label>
+            <div className="relative">
+              <select
+                multiple
+                value={editMenuItemFormData.selectedTags}
+                onChange={(e) => {
+                  const selectedOptions = Array.from(e.target.selectedOptions, option => option.value)
+                  setEditMenuItemFormData(prev => ({ ...prev, selectedTags: selectedOptions }))
+                }}
+                className="w-full min-h-[120px] px-3 py-2 text-sm text-foreground bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                {tags.map(tag => (
+                  <option 
+                    key={tag.id} 
+                    value={tag.id}
+                    className="py-2 px-2"
+                  >
+                    {tag.icon ? `${tag.icon} ${tag.name}` : tag.name} ({tag.type})
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Hold Ctrl/Cmd to select multiple tags
+              </p>
+            </div>
+            
+            {/* Selected Tags Display */}
+            {editMenuItemFormData.selectedTags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                <span className="text-xs text-gray-500">Selected:</span>
+                {editMenuItemFormData.selectedTags.map(tagId => {
+                  const tag = tags.find(t => t.id === tagId)
+                  return tag ? (
+                    <span
+                      key={tagId}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium text-white"
+                      style={{ backgroundColor: tag.color }}
+                    >
+                      {tag.icon && <span>{tag.icon}</span>}
+                      {tag.name}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditMenuItemFormData(prev => ({
+                            ...prev,
+                            selectedTags: prev.selectedTags.filter(id => id !== tagId)
+                          }))
+                        }}
+                        className="ml-1 text-white/70 hover:text-white"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ) : null
+                })}
+              </div>
+            )}
+          </div>
           
           <div className="flex gap-3 justify-end pt-4">
             <Button

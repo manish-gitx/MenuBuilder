@@ -11,17 +11,31 @@ interface MenuItemCardProps {
 
 export function MenuItemCard({ item, onEdit, onDelete, onImageUpload }: MenuItemCardProps) {
   return (
-    <div className="bg-zinc-800 rounded-lg p-4 flex gap-4 items-center">
+    <div className="rounded-lg p-4 flex gap-4 ">
       {/* Left side - vegetarian indicator and name */}
       <div className="flex items-start gap-3 flex-1 min-w-0">
         {/* Vegetarian indicator - green circle */}
-        <div className="w-4 h-4 bg-green-500 rounded-full flex-shrink-0 mt-1"></div>
         
-        {/* Item name */}
+        {/* Item name and tags */}
         <div className="flex-1 min-w-0">
-          <h3 className="text-white font-medium text-lg leading-tight truncate">
+          <h3 className="text-white font-medium text-lg leading-tight truncate mb-2">
             {item.name}
           </h3>
+          {/* Tags */}
+          {item.tags && item.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {item.tags.map(tag => (
+                <span
+                  key={tag.id}
+                  className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
+                  style={{ backgroundColor: tag.color }}
+                >
+                  {tag.icon && <span className="mr-1">{tag.icon}</span>}
+                  {tag.name}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
