@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Category, categoryApi, Menu, menuApi, MenuItem, menuItemApi, Tag, tagApi} from "@/lib/api";
-import { ChevronDown, ChevronUp, EllipsisVertical, Menu as MenuIcon, Plus, Search, GripVertical, Pencil, Trash2, X } from "lucide-react";
+import { ChevronDown, ChevronUp, EllipsisVertical, Menu as MenuIcon, Plus, Search, Pencil, Trash2, X } from "lucide-react";
 import { Image as ImageIcon } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
@@ -10,31 +10,6 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
 import { toast } from "@/components/ui/Toast";
 import { MenuItemCard } from "@/components/ui/MenuItemCard";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-  DragOverEvent,
-  DragStartEvent,
-  DragOverlay,
-  Active,
-  Over,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import {
-  useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = React.use(params)
@@ -51,24 +26,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
   const [selectedMenuItem, setSelectedMenuItem] = useState<MenuItem | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
-  const [activeId, setActiveId] = useState<string | null>(null)
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 250,
-        tolerance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  )
   const [formData, setFormData] = useState({
     name: "",
     description: ""
@@ -131,11 +89,6 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     getCategories(resolvedParams.id)
     getCurrentMenu(resolvedParams.id)
     getTags()
-    
-    // Cleanup function to remove dragging class on unmount
-    return () => {
-      document.body.classList.remove('dragging')
-    }
   }, [resolvedParams.id])
 
   const handleCreateCategory = async (e: React.FormEvent) => {
@@ -161,6 +114,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
       // Refresh categories list
       const updatedCategories = await categoryApi.getCategories({
         menuId: resolvedParams.id,
+        includeItems: true,
       })
       setCategories(updatedCategories.data)
       
@@ -473,108 +427,163 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     }
   }
 
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string)
-    // Add dragging class to body to prevent text selection
-    document.body.classList.add('dragging')
+  // Category reordering functions
+  const moveCategoryUp = async (categoryId: string) => {
+    if (!categories) return
+    
+    const currentIndex = categories.findIndex(cat => cat.id === categoryId)
+    if (currentIndex <= 0) return // Already at top
+    
+    const newCategories = [...categories]
+    const temp = newCategories[currentIndex]
+    newCategories[currentIndex] = newCategories[currentIndex - 1]
+    newCategories[currentIndex - 1] = temp
+    
+    setCategories(newCategories)
+    await updateCategorySortOrder(newCategories)
   }
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
-    setActiveId(null)
-    // Remove dragging class from body
-    document.body.classList.remove('dragging')
+  const moveCategoryDown = async (categoryId: string) => {
+    if (!categories) return
+    
+    const currentIndex = categories.findIndex(cat => cat.id === categoryId)
+    if (currentIndex >= categories.length - 1) return // Already at bottom
+    
+    const newCategories = [...categories]
+    const temp = newCategories[currentIndex]
+    newCategories[currentIndex] = newCategories[currentIndex + 1]
+    newCategories[currentIndex + 1] = temp
+    
+    setCategories(newCategories)
+    await updateCategorySortOrder(newCategories)
+  }
 
-    if (!over || active.id === over.id) {
-      return
-    }
-
-    const activeId = active.id as string
-    const overId = over.id as string
-
-    // Handle category reordering
-    if (activeId.startsWith('category-') && overId.startsWith('category-')) {
-      const activeIndex = categories?.findIndex(cat => `category-${cat.id}` === activeId) ?? -1
-      const overIndex = categories?.findIndex(cat => `category-${cat.id}` === overId) ?? -1
-      
-      if (activeIndex !== -1 && overIndex !== -1 && categories) {
-        const newCategories = arrayMove(categories, activeIndex, overIndex)
-        setCategories(newCategories)
+  // Sub-category reordering functions
+  const moveSubCategoryUp = async (subCategoryId: string) => {
+    if (!categories) return
+    
+    const updatedCategories = categories.map(cat => {
+      if (cat.childCategories?.some(sub => sub.id === subCategoryId)) {
+        const currentIndex = cat.childCategories.findIndex(sub => sub.id === subCategoryId)
+        if (currentIndex <= 0) return cat // Already at top
         
-        // Update sortOrder in the backend
-        updateCategorySortOrder(newCategories)
+        const newSubCategories = [...cat.childCategories]
+        const temp = newSubCategories[currentIndex]
+        newSubCategories[currentIndex] = newSubCategories[currentIndex - 1]
+        newSubCategories[currentIndex - 1] = temp
+        
+        updateCategorySortOrder(newSubCategories)
+        return { ...cat, childCategories: newSubCategories }
       }
-    }
+      return cat
+    })
+    
+    setCategories(updatedCategories)
+  }
 
-    // Handle sub-category reordering
-    if (activeId.startsWith('subcategory-') && overId.startsWith('subcategory-')) {
-      const activeSubId = activeId.replace('subcategory-', '')
-      const overSubId = overId.replace('subcategory-', '')
+  const moveSubCategoryDown = async (subCategoryId: string) => {
+    if (!categories) return
+    
+    const updatedCategories = categories.map(cat => {
+      if (cat.childCategories?.some(sub => sub.id === subCategoryId)) {
+        const currentIndex = cat.childCategories.findIndex(sub => sub.id === subCategoryId)
+        if (currentIndex >= cat.childCategories.length - 1) return cat // Already at bottom
+        
+        const newSubCategories = [...cat.childCategories]
+        const temp = newSubCategories[currentIndex]
+        newSubCategories[currentIndex] = newSubCategories[currentIndex + 1]
+        newSubCategories[currentIndex + 1] = temp
+        
+        updateCategorySortOrder(newSubCategories)
+        return { ...cat, childCategories: newSubCategories }
+      }
+      return cat
+    })
+    
+    setCategories(updatedCategories)
+  }
+
+  // Menu item reordering functions
+  const moveMenuItemUp = async (itemId: string) => {
+    if (!categories) return
+    
+    const updatedCategories = categories.map(cat => {
+      // Check direct menu items
+      if (cat.menuItems?.some(item => item.id === itemId)) {
+        const currentIndex = cat.menuItems.findIndex(item => item.id === itemId)
+        if (currentIndex <= 0) return cat // Already at top
+        
+        const newItems = [...cat.menuItems]
+        const temp = newItems[currentIndex]
+        newItems[currentIndex] = newItems[currentIndex - 1]
+        newItems[currentIndex - 1] = temp
+        
+        updateMenuItemSortOrder(newItems)
+        return { ...cat, menuItems: newItems }
+      }
       
-      const updatedCategories = categories?.map(cat => {
-        if (cat.childCategories?.some(sub => sub.id === activeSubId || sub.id === overSubId)) {
-          const activeIndex = cat.childCategories.findIndex(sub => sub.id === activeSubId)
-          const overIndex = cat.childCategories.findIndex(sub => sub.id === overSubId)
+      // Check sub-category menu items
+      const updatedChildCategories = cat.childCategories?.map(subCat => {
+        if (subCat.menuItems?.some(item => item.id === itemId)) {
+          const currentIndex = subCat.menuItems.findIndex(item => item.id === itemId)
+          if (currentIndex <= 0) return subCat // Already at top
           
-          if (activeIndex !== -1 && overIndex !== -1) {
-            const newSubCategories = arrayMove(cat.childCategories, activeIndex, overIndex)
-            updateCategorySortOrder(newSubCategories)
-            return { ...cat, childCategories: newSubCategories }
-          }
+          const newItems = [...subCat.menuItems]
+          const temp = newItems[currentIndex]
+          newItems[currentIndex] = newItems[currentIndex - 1]
+          newItems[currentIndex - 1] = temp
+          
+          updateMenuItemSortOrder(newItems)
+          return { ...subCat, menuItems: newItems }
         }
-        return cat
+        return subCat
       })
       
-      setCategories(updatedCategories || [])
-    }
+      return { ...cat, childCategories: updatedChildCategories }
+    })
+    
+    setCategories(updatedCategories)
+  }
 
-    // Handle menu item reordering within the same category
-    if (activeId.startsWith('item-') && overId.startsWith('item-')) {
-      // Find the category containing these items
-      const activeCategory = categories?.find(cat => 
-        cat.menuItems?.some(item => `item-${item.id}` === activeId) ||
-        cat.childCategories?.some(subCat => subCat.menuItems?.some(item => `item-${item.id}` === activeId))
-      )
-      
-      if (activeCategory) {
-        // Handle reordering within the same category or sub-category
-        const updatedCategories = categories?.map(cat => {
-          if (cat.id === activeCategory.id) {
-            // Check if items are in direct menu items
-            if (cat.menuItems?.some(item => `item-${item.id}` === activeId)) {
-              const activeIndex = cat.menuItems.findIndex(item => `item-${item.id}` === activeId)
-              const overIndex = cat.menuItems.findIndex(item => `item-${item.id}` === overId)
-              
-              if (activeIndex !== -1 && overIndex !== -1) {
-                const newItems = arrayMove(cat.menuItems, activeIndex, overIndex)
-                updateMenuItemSortOrder(newItems)
-                return { ...cat, menuItems: newItems }
-              }
-            }
-            
-            // Check if items are in sub-categories
-            const updatedChildCategories = cat.childCategories?.map(subCat => {
-              if (subCat.menuItems?.some(item => `item-${item.id}` === activeId)) {
-                const activeIndex = subCat.menuItems.findIndex(item => `item-${item.id}` === activeId)
-                const overIndex = subCat.menuItems.findIndex(item => `item-${item.id}` === overId)
-                
-                if (activeIndex !== -1 && overIndex !== -1) {
-                  const newItems = arrayMove(subCat.menuItems, activeIndex, overIndex)
-                  updateMenuItemSortOrder(newItems)
-                  return { ...subCat, menuItems: newItems }
-                }
-              }
-              return subCat
-            })
-            
-            return { ...cat, childCategories: updatedChildCategories }
-          }
-          return cat
-        })
+  const moveMenuItemDown = async (itemId: string) => {
+    if (!categories) return
+    
+    const updatedCategories = categories.map(cat => {
+      // Check direct menu items
+      if (cat.menuItems?.some(item => item.id === itemId)) {
+        const currentIndex = cat.menuItems.findIndex(item => item.id === itemId)
+        if (currentIndex >= cat.menuItems.length - 1) return cat // Already at bottom
         
-        setCategories(updatedCategories || [])
+        const newItems = [...cat.menuItems]
+        const temp = newItems[currentIndex]
+        newItems[currentIndex] = newItems[currentIndex + 1]
+        newItems[currentIndex + 1] = temp
+        
+        updateMenuItemSortOrder(newItems)
+        return { ...cat, menuItems: newItems }
       }
-    }
+      
+      // Check sub-category menu items
+      const updatedChildCategories = cat.childCategories?.map(subCat => {
+        if (subCat.menuItems?.some(item => item.id === itemId)) {
+          const currentIndex = subCat.menuItems.findIndex(item => item.id === itemId)
+          if (currentIndex >= subCat.menuItems.length - 1) return subCat // Already at bottom
+          
+          const newItems = [...subCat.menuItems]
+          const temp = newItems[currentIndex]
+          newItems[currentIndex] = newItems[currentIndex + 1]
+          newItems[currentIndex + 1] = temp
+          
+          updateMenuItemSortOrder(newItems)
+          return { ...subCat, menuItems: newItems }
+        }
+        return subCat
+      })
+      
+      return { ...cat, childCategories: updatedChildCategories }
+    })
+    
+    setCategories(updatedCategories)
   }
 
   const updateCategorySortOrder = async (categories: Category[]) => {
@@ -601,30 +610,14 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     }
   }
    
-  // Sortable Category Component
-  const SortableCategory = ({ category }: { category: Category }) => {
-    const {
-      attributes,
-      listeners,
-      setNodeRef,
-      transform,
-      transition,
-      isDragging,
-    } = useSortable({ id: `category-${category.id}` })
-
-    const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-      opacity: isDragging ? 0.7 : 1,
-      zIndex: isDragging ? 1000 : 'auto',
-    }
-
+  // Category Component with Up/Down buttons
+  const CategoryComponent = ({ category, categoryIndex }: { category: Category, categoryIndex: number }) => {
     const isExpanded = expandedCategories.has(category.id)
     const hasSubcategories = category.childCategories && category.childCategories.length > 0
     const hasDirectItems = category.menuItems && category.menuItems.length > 0
 
     return (
-      <div ref={setNodeRef} style={style} className="sortable-item">
+      <div className="no-select">
         <div>
           {/* Main Category Header */}
           <div className="flex flex-col px-6 py-4 gap-4 relative">
@@ -632,43 +625,53 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
             <div className="bg-red-500 w-1 h-6 rounded-tr-lg rounded-br-lg absolute top-5 left-0"></div>
 
             <div className="flex items-center justify-between">
-                             <div className="flex items-center gap-2">
-                 <div
-                   className="drag-handle cursor-grab hover:cursor-grabbing p-2 -m-2 touch-manipulation"
-                   {...attributes}
-                   {...listeners}
-                 >
-                   <GripVertical className="w-5 h-5 text-white" />
-                 </div>
+              <div className="flex items-center gap-2">
                 <span className="text-white text-sm font-bold tracking-wide">
                   {category.name} ({(category._count?.menuItems || 0) + (category.childCategories?.reduce((sum, child) => sum + (child._count?.menuItems || 0), 0) || 0)})
                 </span>
               </div>
 
-                             {/* Action buttons */}
-               <div className="flex flex-row gap-2">
-                 <button 
-                   onClick={() => handleEditCategory(category)}
-                   className="text-white hover:text-gray-300 transition-colors"
-                 >
-                   <Pencil className="w-4 h-4" />
-                 </button>
-                 <button 
-                   onClick={() => handleDeleteCategory(category)}
-                   className="text-red-400 hover:text-red-300 transition-colors"
-                 >
-                   <Trash2 className="w-4 h-4" />
-                 </button>
-                 <button 
-                   onClick={() => toggleCategory(category.id)}
-                   className="text-white hover:text-gray-300 transition-colors"
-                 >
-                  {isExpanded ? (
+              {/* Action buttons */}
+              <div className="flex flex-row gap-2">
+                {/* Up/Down buttons for category reordering */}
+                <div className="flex flex-col gap-1">
+                  <button 
+                    onClick={() => moveCategoryUp(category.id)}
+                    disabled={categoryIndex === 0}
+                    className={`text-white hover:text-gray-300 transition-colors ${categoryIndex === 0 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                  >
                     <ChevronUp className="w-4 h-4" />
-                  ) : (
+                  </button>
+                  <button 
+                    onClick={() => moveCategoryDown(category.id)}
+                    disabled={categories ? categoryIndex === categories.length - 1 : true}
+                    className={`text-white hover:text-gray-300 transition-colors ${categories && categoryIndex === categories.length - 1 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                  >
                     <ChevronDown className="w-4 h-4" />
-                  )}
+                  </button>
+                </div>
+                <button 
+                  onClick={() => handleEditCategory(category)}
+                  className="text-white hover:text-gray-300 transition-colors"
+                >
+                  <Pencil className="w-4 h-4" />
                 </button>
+                <button 
+                  onClick={() => handleDeleteCategory(category)}
+                  className="text-red-400 hover:text-red-300 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={() => toggleCategory(category.id)}
+                  className="text-white hover:text-gray-300 transition-colors"
+                >
+                 {isExpanded ? (
+                   <ChevronUp className="w-4 h-4" />
+                 ) : (
+                   <ChevronDown className="w-4 h-4" />
+                 )}
+               </button>
               </div>
             </div>
 
@@ -680,23 +683,29 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
                 {/* Sub-categories */}
                 {hasSubcategories && (
                   <div className="space-y-4 mb-4">
-                    <SortableContext items={category.childCategories?.map(sub => `subcategory-${sub.id}`) || []} strategy={verticalListSortingStrategy}>
-                      {category.childCategories?.map((subCategory) => (
-                        <SortableSubCategory key={subCategory.id} subCategory={subCategory} />
-                      ))}
-                    </SortableContext>
+                    {category.childCategories?.map((subCategory, subIndex) => (
+                      <SubCategoryComponent 
+                        key={subCategory.id} 
+                        subCategory={subCategory} 
+                        subIndex={subIndex}
+                        totalSubCategories={category.childCategories?.length || 0}
+                      />
+                    ))}
                   </div>
                 )}
 
                 {/* Direct menu items (if no sub-categories) */}
                 {hasDirectItems && !hasSubcategories && (
-                  <SortableContext items={category.menuItems?.map(item => `item-${item.id}`) || []} strategy={verticalListSortingStrategy}>
-                    <div className="grid grid-cols-1 gap-3 mb-4">
-                      {category.menuItems?.map((item) => (
-                        <SortableMenuItem key={item.id} item={item} />
-                      ))}
-                    </div>
-                  </SortableContext>
+                  <div className="grid grid-cols-1 gap-3 mb-4">
+                    {category.menuItems?.map((item, itemIndex) => (
+                      <MenuItemComponent 
+                        key={item.id} 
+                        item={item} 
+                        itemIndex={itemIndex}
+                        totalItems={category.menuItems?.length || 0}
+                      />
+                    ))}
+                  </div>
                 )}
                 
                 {/* Action buttons */}
@@ -725,40 +734,38 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     )
   }
 
-  // Sortable SubCategory Component
-  const SortableSubCategory = ({ subCategory }: { subCategory: Category }) => {
-    const {
-      attributes,
-      listeners,
-      setNodeRef,
-      transform,
-      transition,
-      isDragging,
-    } = useSortable({ id: `subcategory-${subCategory.id}` })
-
-    const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-      opacity: isDragging ? 0.7 : 1,
-      zIndex: isDragging ? 1000 : 'auto',
-    }
-
+  // SubCategory Component with Up/Down buttons
+  const SubCategoryComponent = ({ subCategory, subIndex, totalSubCategories }: { 
+    subCategory: Category, 
+    subIndex: number, 
+    totalSubCategories: number 
+  }) => {
     return (
-      <div ref={setNodeRef} style={style} className=" sortable-item">
+      <div className="pl-4 no-select">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div
-              className="drag-handle cursor-grab hover:cursor-grabbing p-1 -m-1 touch-manipulation"
-              {...attributes}
-              {...listeners}
-            >
-              <GripVertical className="w-4 h-4 text-white" />
-            </div>
             <div className="text-white text-sm font-bold tracking-wide">
               {subCategory.name.split('').join(' ').toUpperCase()} ({subCategory._count?.menuItems || 0})
             </div>
           </div>
           <div className="flex gap-2">
+            {/* Up/Down buttons for sub-category reordering */}
+            <div className="flex flex-col gap-1">
+              <button 
+                onClick={() => moveSubCategoryUp(subCategory.id)}
+                disabled={subIndex === 0}
+                className={`text-white hover:text-gray-300 transition-colors ${subIndex === 0 ? 'opacity-30 cursor-not-allowed' : ''}`}
+              >
+                <ChevronUp className="w-3 h-3" />
+              </button>
+              <button 
+                onClick={() => moveSubCategoryDown(subCategory.id)}
+                disabled={subIndex === totalSubCategories - 1}
+                className={`text-white hover:text-gray-300 transition-colors ${subIndex === totalSubCategories - 1 ? 'opacity-30 cursor-not-allowed' : ''}`}
+              >
+                <ChevronDown className="w-3 h-3" />
+              </button>
+            </div>
             <button 
               onClick={() => handleDeleteSubCategory(subCategory)}
               className="text-red-400 hover:text-red-300 transition-colors"
@@ -770,53 +777,55 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
        
         {/* Menu items in sub-category */}
         {subCategory.menuItems && subCategory.menuItems.length > 0 && (
-          <SortableContext items={subCategory.menuItems.map(item => `item-${item.id}`)} strategy={verticalListSortingStrategy}>
-            <div className="grid grid-cols-1 gap-3">
-              {subCategory.menuItems.map((item) => (
-                <SortableMenuItem key={item.id} item={item} />
-              ))}
-            </div>
-          </SortableContext>
+          <div className="grid grid-cols-1 gap-3">
+            {subCategory.menuItems.map((item, itemIndex) => (
+              <MenuItemComponent 
+                key={item.id} 
+                item={item} 
+                itemIndex={itemIndex}
+                totalItems={subCategory.menuItems?.length || 0}
+              />
+            ))}
+          </div>
         )}
       </div>
     )
   }
 
-  // Sortable MenuItem Component
-  const SortableMenuItem = ({ item }: { item: MenuItem }) => {
-    const {
-      attributes,
-      listeners,
-      setNodeRef,
-      transform,
-      transition,
-      isDragging,
-    } = useSortable({ id: `item-${item.id}` })
-
-    const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-      opacity: isDragging ? 0.7 : 1,
-      zIndex: isDragging ? 1000 : 'auto',
-    }
-
+  // MenuItem Component with Up/Down buttons
+  const MenuItemComponent = ({ item, itemIndex, totalItems }: { 
+    item: MenuItem, 
+    itemIndex: number, 
+    totalItems: number 
+  }) => {
     return (
-      <div ref={setNodeRef} style={style} className="relative sortable-item">
-        <div
-          className="drag-handle absolute top-10 left-2 transform -translate-y-1/2 cursor-grab hover:cursor-grabbing z-10 p-2 -m-2 touch-manipulation"
-          {...attributes}
-          {...listeners}
-        >
-          <GripVertical className="w-5 h-5 text-white" />
-        </div>
-        <div className="pl-8 border-b-1 border-slate-300">
-          <MenuItemCard 
-            item={item} 
-            onEdit={handleEditMenuItem}
-            onDelete={handleDeleteMenuItem}
-            onImageUpload={handleImageUpload}
-          />
-
+      <div className="relative no-select">
+        <div className="flex items-center gap-2 border-b-1 border-slate-300">
+          {/* Up/Down buttons for menu item reordering */}
+          <div className="flex flex-col gap-1 py-2">
+            <button 
+              onClick={() => moveMenuItemUp(item.id)}
+              disabled={itemIndex === 0}
+              className={`text-white hover:text-gray-300 transition-colors ${itemIndex === 0 ? 'opacity-30 cursor-not-allowed' : ''}`}
+            >
+              <ChevronUp className="w-3 h-3" />
+            </button>
+            <button 
+              onClick={() => moveMenuItemDown(item.id)}
+              disabled={itemIndex === totalItems - 1}
+              className={`text-white hover:text-gray-300 transition-colors ${itemIndex === totalItems - 1 ? 'opacity-30 cursor-not-allowed' : ''}`}
+            >
+              <ChevronDown className="w-3 h-3" />
+            </button>
+          </div>
+          <div className="flex-1">
+            <MenuItemCard 
+              item={item} 
+              onEdit={handleEditMenuItem}
+              onDelete={handleDeleteMenuItem}
+              onImageUpload={handleImageUpload}
+            />
+          </div>
         </div>
       </div>
     )
@@ -842,30 +851,19 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
       </header>
 
       {/* Category main div */}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-        onDragCancel={() => {
-          setActiveId(null)
-          document.body.classList.remove('dragging')
-        }}
-      >
-        <div className="pb-32">
-  {categories === null ? (
-    <div className="text-white text-center py-8">Loading categories...</div>
-  ) : categories.length === 0 ? (
-    <div className="text-white text-center py-8">No categories found</div>
-  ) : (
-    <SortableContext items={categories.map(cat => `category-${cat.id}`)} strategy={verticalListSortingStrategy}>
-      {categories.map((category) => (
-        <SortableCategory key={category.id} category={category} />
-      ))}
-    </SortableContext>
-  )}
-</div>
-      </DndContext>
+      <div className="pb-32">
+        {categories === null ? (
+          <div className="text-white text-center py-8">Loading categories...</div>
+        ) : categories.length === 0 ? (
+          <div className="text-white text-center py-8">No categories found</div>
+        ) : (
+          <div>
+            {categories.map((category, categoryIndex) => (
+              <CategoryComponent key={category.id} category={category} categoryIndex={categoryIndex} />
+            ))}
+          </div>
+        )}
+      </div>
 
       <div className="fixed bottom-6 right-6 z-50">
         <div className="flex flex-col gap-3">
