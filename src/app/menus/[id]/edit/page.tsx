@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { Category, categoryApi, Menu, menuApi, MenuItem, menuItemApi, Tag, tagApi} from "@/lib/api";
 import { ChevronDown, ChevronUp, EllipsisVertical, Menu as MenuIcon, Plus, Search, Pencil, Trash2, X, ArrowLeft } from "lucide-react";
 import { Image as ImageIcon } from "lucide-react";
@@ -15,6 +17,7 @@ import { MenuItemCard } from "@/components/ui/MenuItemCard";
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = React.use(params)
   const router = useRouter()
+  const { isLoaded, userId, isLoading: isAuthLoading } = useRequireAuth()
   const [categories, setCategories] = useState<Category[] | null>(null)
   const [menu,setMenu]=useState<Menu | null>(null)
   const [tags, setTags] = useState<Tag[]>([])
@@ -55,6 +58,9 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   })
 
   useEffect(() => {
+    // Only fetch data if user is authenticated
+    if (!userId) return
+
     const getCategories = async (menuId: string) => {
       try {
         const response = await categoryApi.getCategories({
@@ -92,7 +98,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     getCategories(resolvedParams.id)
     getCurrentMenu(resolvedParams.id)
     getTags()
-  }, [resolvedParams.id])
+  }, [resolvedParams.id, userId])
 
   const handleCreateCategory = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -944,6 +950,11 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
         </div>
       </div>
     )
+  }
+
+  // Show loading while auth is being checked
+  if (isAuthLoading || !userId) {
+    return <LoadingScreen variant="dark" />
   }
 
   return (

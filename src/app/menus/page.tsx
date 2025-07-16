@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth, UserButton } from "@clerk/nextjs"
+import { UserButton } from "@clerk/nextjs"
+import { useRequireAuth } from "@/hooks/useRequireAuth"
+import { LoadingScreen } from "@/components/ui/LoadingScreen"
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { MenuCard } from '@/components/dashboard/MenuCard'
@@ -21,19 +23,12 @@ import { clsx } from 'clsx'
 
 export default function Dashboard() {
   const router = useRouter()
-  const { isLoaded, userId } = useAuth()
+  const { isLoaded, userId, isLoading: isAuthLoading } = useRequireAuth()
   const [menus, setMenus] = useState<Menu[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [filterPublic, setFilterPublic] = useState<boolean | undefined>(undefined)
-
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (isLoaded && !userId) {
-      router.push('/')
-    }
-  }, [isLoaded, userId, router])
 
   // Load menus
   const loadMenus = useCallback(async () => {
@@ -101,18 +96,9 @@ export default function Dashboard() {
     return true
   })
 
-  // Show loading while checking auth
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    )
-  }
-
-  // Don't render if not authenticated (will redirect)
-  if (!userId) {
-    return null
+  // Show loading while auth is being checked
+  if (isAuthLoading || !userId) {
+    return <LoadingScreen variant="light" />
   }
 
   return (
