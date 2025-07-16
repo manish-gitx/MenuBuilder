@@ -19,6 +19,12 @@ export const metadata: Metadata = {
   description: "Create stunning digital catering menus in minutes. Professional, shareable, and always up-to-date.",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{

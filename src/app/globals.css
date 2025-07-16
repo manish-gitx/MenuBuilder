@@ -344,3 +344,29 @@
     background-color: hsl(var(--color-muted) / 0.5);
   }
 }
+
+/* Mobile touch improvements for drag and drop */
+@media (pointer: coarse) {
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+  
+  /* Increase touch targets on mobile */
+  [data-dnd-kit-sortable-handle] {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  /* Prevent text selection during drag on mobile */
+  .dragging * {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  /* Smooth transitions for mobile */
+  .sortable-item {
+    transition: transform 150ms ease;
+  }
+}

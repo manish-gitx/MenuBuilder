@@ -15,6 +15,7 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -52,7 +53,17 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const [activeId, setActiveId] = useState<string | null>(null)
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 5,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -562,7 +573,8 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     const style = {
       transform: CSS.Transform.toString(transform),
       transition,
-      opacity: isDragging ? 0.5 : 1,
+      opacity: isDragging ? 0.7 : 1,
+      zIndex: isDragging ? 1000 : 'auto',
     }
 
     const isExpanded = expandedCategories.has(category.id)
@@ -570,7 +582,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     const hasDirectItems = category.menuItems && category.menuItems.length > 0
 
     return (
-      <div ref={setNodeRef} style={style}>
+      <div ref={setNodeRef} style={style} className="sortable-item">
         <div>
           {/* Main Category Header */}
           <div className="flex flex-col px-6 py-4 gap-4 relative">
@@ -578,14 +590,14 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
             <div className="bg-red-500 w-1 h-6 rounded-tr-lg rounded-br-lg absolute top-5 left-0"></div>
 
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div
-                  className="cursor-grab hover:cursor-grabbing"
-                  {...attributes}
-                  {...listeners}
-                >
-                  <GripVertical className="w-4 h-4 text-white" />
-                </div>
+                             <div className="flex items-center gap-2">
+                 <div
+                   className="cursor-grab hover:cursor-grabbing p-2 -m-2 touch-manipulation"
+                   {...attributes}
+                   {...listeners}
+                 >
+                   <GripVertical className="w-5 h-5 text-white" />
+                 </div>
                 <span className="text-white text-sm font-bold tracking-wide">
                   {category.name} ({(category._count?.menuItems || 0) + (category.childCategories?.reduce((sum, child) => sum + (child._count?.menuItems || 0), 0) || 0)})
                 </span>
@@ -708,17 +720,18 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     const style = {
       transform: CSS.Transform.toString(transform),
       transition,
-      opacity: isDragging ? 0.5 : 1,
+      opacity: isDragging ? 0.7 : 1,
+      zIndex: isDragging ? 1000 : 'auto',
     }
 
     return (
-      <div ref={setNodeRef} style={style} className="relative">
+      <div ref={setNodeRef} style={style} className="relative sortable-item">
         <div
-          className="absolute top-1/2 left-2 transform -translate-y-1/2 cursor-grab hover:cursor-grabbing z-10"
+          className="absolute top-1/2 left-2 transform -translate-y-1/2 cursor-grab hover:cursor-grabbing z-10 p-2 -m-2 touch-manipulation"
           {...attributes}
           {...listeners}
         >
-          <GripVertical className="w-4 h-4 text-white" />
+          <GripVertical className="w-5 h-5 text-white" />
         </div>
         <div className="pl-8">
           <MenuItemCard 
