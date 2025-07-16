@@ -1,8 +1,9 @@
 "use client"
 
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Category, categoryApi, Menu, menuApi, MenuItem, menuItemApi, Tag, tagApi} from "@/lib/api";
-import { ChevronDown, ChevronUp, EllipsisVertical, Menu as MenuIcon, Plus, Search, Pencil, Trash2, X } from "lucide-react";
+import { ChevronDown, ChevronUp, EllipsisVertical, Menu as MenuIcon, Plus, Search, Pencil, Trash2, X, ArrowLeft } from "lucide-react";
 import { Image as ImageIcon } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
@@ -13,6 +14,7 @@ import { MenuItemCard } from "@/components/ui/MenuItemCard";
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = React.use(params)
+  const router = useRouter()
   const [categories, setCategories] = useState<Category[] | null>(null)
   const [menu,setMenu]=useState<Menu | null>(null)
   const [tags, setTags] = useState<Tag[]>([])
@@ -949,7 +951,15 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
 
       <header className="flex flex-col gap-3 p-2 border-b-1 border-slate-300">
         <div className="flex justify-between">
-          <span className="text-sky-50 text-xl font-bold">Menu</span>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => router.push('/menus')}
+              className="text-sky-50 hover:text-gray-300 transition-colors"
+            >
+              <ArrowLeft className="w-6 h-6" />
+            </button>
+            <span className="text-sky-50 text-xl font-bold">Menu</span>
+          </div>
       
           <div className="flex gap-4">
             <Search className="w-6 h-6  text-sky-50" />
