@@ -6,10 +6,17 @@ interface MenuItemCardProps {
   item: MenuItem
   onEdit: (item: MenuItem) => void
   onDelete: (item: MenuItem) => void
-  onImageUpload?: (item: MenuItem) => void
+  onImageUpload?: (item: MenuItem, file: File) => void
 }
 
 export function MenuItemCard({ item, onEdit, onDelete, onImageUpload }: MenuItemCardProps) {
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file && onImageUpload) {
+      onImageUpload(item, file)
+    }
+  }
+
   return (
     <div className="rounded-lg p-4 flex gap-4 ">
       {/* Left side - vegetarian indicator and name */}
@@ -58,12 +65,17 @@ export function MenuItemCard({ item, onEdit, onDelete, onImageUpload }: MenuItem
           
           {/* Upload overlay on hover */}
           {onImageUpload && (
-            <button
-              onClick={() => onImageUpload(item)}
-              className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <CameraIcon className="w-5 h-5 text-white" />
-            </button>
+            <>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="absolute inset-0 opacity-0 cursor-pointer z-10"
+              />
+              <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                <CameraIcon className="w-5 h-5 text-white" />
+              </div>
+            </>
           )}
         </div>
 

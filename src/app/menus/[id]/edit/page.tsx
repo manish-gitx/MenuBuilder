@@ -26,6 +26,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
   const [selectedMenuItem, setSelectedMenuItem] = useState<MenuItem | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
+  const [showGallery, setShowGallery] = useState(false)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -159,9 +160,34 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     setIsEditMenuItemModalOpen(true)
   }
 
-  const handleImageUpload = (item: MenuItem) => {
-    // TODO: Implement image upload functionality
-    console.log('Upload image for:', item)
+  const handleImageUpload = async (item: MenuItem, file: File) => {
+    try {
+      const formData = new FormData()
+      formData.append('image', file)
+
+      const response = await fetch(`/api/menu-items/${item.id}/upload-image`, {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image')
+      }
+
+      const result = await response.json()
+      toast.success('Image uploaded successfully!')
+
+      // Refresh categories to show updated image
+      const updatedCategories = await categoryApi.getCategories({
+        menuId: resolvedParams.id,
+        includeItems: true,
+      })
+      setCategories(updatedCategories.data)
+
+    } catch (error) {
+      console.error('Image upload error:', error)
+      toast.error('Failed to upload image. Please try again.')
+    }
   }
 
   const handleEditCategory = (category: Category) => {
@@ -584,6 +610,93 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     })
     
     setCategories(updatedCategories)
+  }
+
+  // Function to get all images from menu items
+  const getAllImages = (): Array<{item: MenuItem, imageUrl: string}> => {
+    const images: Array<{item: MenuItem, imageUrl: string}> = []
+    
+    categories?.forEach(category => {
+      // Check direct menu items
+      category.menuItems?.forEach(item => {
+        if (item.imageUrl) {
+          images.push({ item, imageUrl: item.imageUrl })
+        }
+      })
+      
+      // Check sub-category menu items
+      category.childCategories?.forEach(subCategory => {
+        subCategory.menuItems?.forEach(item => {
+          if (item.imageUrl) {
+            images.push({ item, imageUrl: item.imageUrl })
+          }
+        })
+      })
+    })
+    
+    return images
+  }
+
+  // Gallery Component
+  const GalleryComponent = () => {
+    const images = getAllImages()
+    
+    if (images.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center py-20">
+          <ImageIcon className="w-16 h-16 text-gray-500 mb-4" />
+          <h3 className="text-white text-xl font-medium mb-2">No Images Yet</h3>
+          <p className="text-gray-400 text-center">
+            Upload images to your menu items to see them here
+          </p>
+        </div>
+      )
+    }
+    
+    return (
+      <div className="p-6">
+        <h2 className="text-white text-lg font-bold mb-4">
+          All Images ({images.length})
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {images.map(({ item, imageUrl }, index) => (
+            <div key={`${item.id}-${index}`} className="bg-zinc-800 rounded-lg overflow-hidden">
+              <div className="aspect-square relative">
+                <img 
+                  src={imageUrl} 
+                  alt={item.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-3">
+                <h3 className="text-white font-medium text-sm truncate">
+                  {item.name}
+                </h3>
+                {item.tags && item.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {item.tags.slice(0, 2).map(tag => (
+                      <span
+                        key={tag.id}
+                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
+                        style={{ backgroundColor: tag.color }}
+                      >
+                        {tag.icon && <span className="mr-1">{tag.icon}</span>}
+                        {tag.name}
+                      </span>
+                    ))}
+                    {item.tags.length > 2 && (
+                      <span className="text-xs text-gray-400">
+                        +{item.tags.length - 2} more
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   const updateCategorySortOrder = async (categories: Category[]) => {
