@@ -113,6 +113,7 @@ export async function POST(request: NextRequest) {
       return errorResponse('Menu not found or unauthorized', 404)
     }
     
+    let category;
     // Check if parent category exists and can accept subcategories
     if (validatedData.parentCategoryId) {
       const parentCategory = await prisma.category.findUnique({
@@ -132,17 +133,26 @@ export async function POST(request: NextRequest) {
         return errorResponse('Cannot add subcategories to a category that has menu items', 400)
       }
       
-      // Update parent category to indicate it now has subcategories
-      await prisma.category.update({
-        where: { id: validatedData.parentCategoryId },
-        data: { hasSubcategories: true }
+      category = await prisma.$transaction(async (tx) => {
+        // Update parent category to indicate it now has subcategories
+        await tx.category.update({
+          where: { id: validatedData.parentCategoryId },
+          data: { hasSubcategories: true }
+        })
+
+        const newCategory = await tx.category.create({
+          data: validatedData,
+          include: defaultCategoryInclude
+        })
+        
+        return newCategory
+      })
+    } else {
+      category = await prisma.category.create({
+        data: validatedData,
+        include: defaultCategoryInclude
       })
     }
-    
-    const category = await prisma.category.create({
-      data: validatedData,
-      include: defaultCategoryInclude
-    })
     
     return successResponse(formatCategoryResponse(category), 'Category created successfully')
   } catch (error) {

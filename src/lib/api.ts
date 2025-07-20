@@ -139,6 +139,13 @@ export const menuApi = {
     })
     if (!response.ok) throw new Error('Failed to delete menu')
     return response.json()
+  },
+
+  // Get menu by share token (public access)
+  getMenuByShareToken: async (token: string): Promise<ApiResponse<Menu & { categories: Category[] }>> => {
+    const response = await fetch(`${API_BASE}/menus/share/${token}`)
+    if (!response.ok) throw new Error('Failed to fetch menu by share token')
+    return response.json()
   }
 }
 

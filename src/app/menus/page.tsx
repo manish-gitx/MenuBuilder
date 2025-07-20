@@ -59,7 +59,7 @@ export default function Dashboard() {
   }
 
   const handlePreviewMenu = (menu: Menu) => {
-    router.push(`/menus/${menu.id}/preview`)
+    router.push(`/share/${menu.shareToken}`)
   }
 
   const handleShareMenu = (menu: Menu) => {
