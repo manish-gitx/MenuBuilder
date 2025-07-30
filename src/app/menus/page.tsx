@@ -59,12 +59,12 @@ export default function Dashboard() {
   }
 
   const handlePreviewMenu = (menu: Menu) => {
-    router.push(`/share/${menu.shareToken}`)
+    router.push(`/preview/${menu.shareToken}`)
   }
 
   const handleShareMenu = (menu: Menu) => {
     if (menu.shareToken) {
-      const shareUrl = `${window.location.origin}/share/${menu.shareToken}`
+      const shareUrl = `${window.location.origin}/preview/${menu.shareToken}`
       navigator.clipboard.writeText(shareUrl)
       toast.success('Share link copied to clipboard!')
     } else {
