@@ -68,7 +68,7 @@ const PreviewMenuItemCard = ({ item }: { item: MenuItem }) => {
               style={{borderRadius:"5px"}}
               src={item.imageUrl}
               alt={item.name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-scale-down"
             />
           ) : (
             <div className="w-full h-full bg-gray-200 rounded-md"></div>
