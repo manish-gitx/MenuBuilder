@@ -10,10 +10,10 @@ const PreviewMenuItemCard = ({ item }: { item: MenuItem }) => {
   const getDietaryIcon = () => {
     const dietaryTag = item.tags?.find(tag => tag.type === 'dietary');
     if (dietaryTag?.name.toLowerCase() === 'vegetarian') {
-      return '/veg-icon.svg';
+      return '/veg-icon.png';
     }
     if (dietaryTag?.name.toLowerCase() === 'non-vegetarian') {
-      return '/non-veg-icon.svg';
+      return '/non-veg-icon.png';
     }
     return null;
   };
@@ -28,18 +28,21 @@ const PreviewMenuItemCard = ({ item }: { item: MenuItem }) => {
   }, [item.description]);
 
   return (
-    <div className={`flex justify-between ${!isExpanded ? 'max-h-[164px]' : ''}`}>
-      {/* Left side */}
-      <div className="flex-1 pr-4 min-w-0">
-        {dietaryIcon && (
+    <>
+     {dietaryIcon && (
           <div className="mb-1">
             <img
               src={dietaryIcon}
               alt="dietary icon"
-              className="w-6 h-6"
+              className="w-3 h-3"
             />
           </div>
         )}
+   
+    <div className={`flex justify-between ${!isExpanded ? 'max-h-[164px]' : ''}`}>
+      
+      {/* Left side */}
+      <div className="flex-1 pr-4 min-w-0">
         <div className="text-base font-bold">{item.name}</div>
         {item.description && (
           <div className="mt-3 break-words font-light text-base leading-[21px] tracking-[-0.4px] text-[rgba(2,6,12,0.6)]">
@@ -84,6 +87,7 @@ const PreviewMenuItemCard = ({ item }: { item: MenuItem }) => {
               leading-[22px]
               tracking-tight
               w-[120px]
+              h-[38px]
               text-center
               p-3
               rounded-lg
@@ -97,6 +101,7 @@ const PreviewMenuItemCard = ({ item }: { item: MenuItem }) => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
