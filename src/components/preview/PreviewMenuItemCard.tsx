@@ -16,10 +16,10 @@ const PreviewMenuItemCard = ({ item, addToCart, removeFromCart, isInCart }: Prev
   const getDietaryIcon = () => {
     const dietaryTag = item.tags?.find(tag => tag.type === 'dietary');
     if (dietaryTag?.name.toLowerCase() === 'vegetarian') {
-      return '/veg-icon.svg';
+      return '/veg-icon.png';
     }
     if (dietaryTag?.name.toLowerCase() === 'non-vegetarian') {
-      return '/non-veg-icon.svg';
+      return '/non-veg-icon.png';
     }
     return null;
   };
@@ -48,18 +48,22 @@ const PreviewMenuItemCard = ({ item, addToCart, removeFromCart, isInCart }: Prev
   };
 
   return (
-    <div className="flex justify-between items-start">
-      {/* Left side */}
-      <div className="flex-1 pr-4 min-w-0">
-        {dietaryIcon && (
+    <>
+
+{dietaryIcon && (
           <div className="mb-1">
             <img
               src={dietaryIcon}
               alt="dietary icon"
-              className="w-6 h-6"
+              className="w-[16px] h-[16px]"
             />
           </div>
         )}
+    <div className="flex justify-between items-start">
+     
+   
+      <div className="flex-1 pr-4 min-w-0">
+        
         <div className="text-base font-bold">{item.name}</div>
         {item.description && (
           <div className="mt-3 break-words font-light text-base leading-[21px] tracking-[-0.4px] text-[rgba(2,6,12,0.6)]">
@@ -119,6 +123,7 @@ const PreviewMenuItemCard = ({ item, addToCart, removeFromCart, isInCart }: Prev
         </div>
       </div>
     </div>
+    </>
   );
 };
 

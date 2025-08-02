@@ -13,7 +13,7 @@ interface CategorieCardProps {
 }
 
 const CategorieCard = ({ category, addToCart, removeFromCart, isInCart }: CategorieCardProps) => {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
   const renderMenuItems = (items: any[]) => {
     return items.map((item, index) => (
@@ -39,39 +39,39 @@ const CategorieCard = ({ category, addToCart, removeFromCart, isInCart }: Catego
   return (
     <>
       <div className="px-6 py-2">
-        <div className="flex justify-between" style={{ marginBottom: isOpen ? "1.5rem" : 0 }}>
+        <div className="flex justify-between" style={{ marginBottom: ((hasSubCategories) || (isOpen)) ? "1.5rem" : 0 }}>
           <div className="font-bold text-xl">{category.name}</div>
-          <div onClick={() => setIsOpen(!isOpen)} className="cursor-pointer">
-            {isOpen ? <ChevronUp /> : <ChevronDown />}
-          </div>
+          {!hasSubCategories && (
+            <div onClick={() => setIsOpen(!isOpen)} className="cursor-pointer">
+              {isOpen ? <ChevronUp /> : <ChevronDown />}
+            </div>
+          )}
         </div>
 
-        {isOpen && (
+        {hasSubCategories ? (
           <div>
-            {hasSubCategories ? (
-              category.childCategories.map((childCategory, index) => (
-                <div key={childCategory.id}>
-                  <SubCategoryCard 
-                    category={childCategory} 
-                    addToCart={addToCart} 
-                    removeFromCart={removeFromCart} 
-                    isInCart={isInCart} 
-                  />
-                  {index < category.childCategories.length - 1 && (
-                     <div
-                     className="my-7 border-t-1 w-full mx-0"
-                     style={{ borderColor: "rgba(2, 6, 12, 0.15)" }}
-                   ></div>
-                  )}
-                </div>
-              ))
-            ) : (
-              renderMenuItems(category.menuItems || [])
-            )}
+            {category.childCategories.map((childCategory, index) => (
+              <div key={childCategory.id}>
+                <SubCategoryCard 
+                  category={childCategory} 
+                  addToCart={addToCart} 
+                  removeFromCart={removeFromCart} 
+                  isInCart={isInCart} 
+                />
+                {index < category.childCategories.length - 1 && (
+                   <div
+                   className="my-5 border-t-1 w-full mx-0"
+                   style={{ borderColor: "rgba(2, 6, 12, 0.15)" }}
+                 ></div>
+                )}
+              </div>
+            ))}
           </div>
+        ) : (
+          isOpen && <div>{renderMenuItems(category.menuItems || [])}</div>
         )}
       </div>
-      {isOpen && <div className="py-2"></div>}
+      {(isOpen) && <div className="py-2"></div>}
       <div className="h-4 border-b-[16px] border-b-[rgba(2,6,12,0.05)]"></div>
     </>
   );
@@ -85,7 +85,7 @@ interface SubCategoryCardProps {
 }
 
 const SubCategoryCard = ({ category, addToCart, removeFromCart, isInCart }: SubCategoryCardProps) => {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
   const renderMenuItems = (items: any[]) => {
     return items.map((item, index) => (
@@ -108,7 +108,7 @@ const SubCategoryCard = ({ category, addToCart, removeFromCart, isInCart }: SubC
 
   return (
     <div>
-      <div className="flex justify-between mb-4">
+      <div className={`flex justify-between${isOpen ? ' mb-4' : ''}`}>
         <div className="text-base font-bold">{category.name}</div>
         <div onClick={() => setIsOpen(!isOpen)} className="cursor-pointer">
           {isOpen ? <ChevronUp /> : <ChevronDown />}
