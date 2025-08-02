@@ -84,7 +84,7 @@ const Page = () => {
             Menu Not Found
           </h1>
           <p className="text-muted-foreground">
-            The menu you're looking for doesn't exist or the share link is
+            The menu you&apos;re looking for doesn&apos;t exist or the share link is
             invalid.
           </p>
         </div>
