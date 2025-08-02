@@ -142,7 +142,7 @@ export const menuApi = {
   },
 
   // Get menu by share token (public access)
-  getMenuByShareToken: async (token: string): Promise<ApiResponse<Menu & { categories: Category[] }>> => {
+  getMenuByShareToken: async (token: string): Promise<ApiResponse<{ menu: Menu; categories: Category[] }>> => {
     const response = await fetch(`${API_BASE}/menus/share/${token}`)
     if (!response.ok) throw new Error('Failed to fetch menu by share token')
     return response.json()

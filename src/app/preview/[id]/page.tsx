@@ -28,26 +28,13 @@ const Page = () => {
   };
 
   useEffect(() => {
-    const getCategories = async (menuId: string) => {
-      try {
-        const response = await categoryApi.getCategories({
-          menuId: menuId,
-          includeItems: true,
-        });
-        setCategories(response.data);
-      } catch (error) {
-        console.error('Failed to fetch categories:', error);
-        setCategories(null);
-      }
-    };
-
     const fetchMenu = async () => {
       try {
         setLoading(true);
         setError(null);
         const response = await menuApi.getMenuByShareToken(id);
-        await getCategories(response.data.id);
-        setMenu(response.data);
+        setMenu(response.data.menu);
+        setCategories(response.data.categories);
       } catch (err) {
         console.error("Failed to fetch menu:", err);
         setError("Failed to load menu. Please check the share link.");

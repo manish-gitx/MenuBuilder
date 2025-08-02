@@ -39,7 +39,7 @@ const CategorieCard = ({ category, addToCart, removeFromCart, isInCart }: Catego
   return (
     <>
       <div className="px-6 py-2">
-        <div className="flex justify-between mb-4">
+        <div className="flex justify-between" style={{ marginBottom: isOpen ? "1.5rem" : 0 }}>
           <div className="font-bold text-xl">{category.name}</div>
           <div onClick={() => setIsOpen(!isOpen)} className="cursor-pointer">
             {isOpen ? <ChevronUp /> : <ChevronDown />}
@@ -71,7 +71,8 @@ const CategorieCard = ({ category, addToCart, removeFromCart, isInCart }: Catego
           </div>
         )}
       </div>
-      <div className="h-4 py-2 border-b-[16px] border-b-[rgba(2,6,12,0.05)]"></div>
+      {isOpen && <div className="py-2"></div>}
+      <div className="h-4 border-b-[16px] border-b-[rgba(2,6,12,0.05)]"></div>
     </>
   );
 };
