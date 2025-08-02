@@ -28,7 +28,7 @@ const PreviewMenuItemCard = ({ item }: { item: MenuItem }) => {
   }, [item.description]);
 
   return (
-    <div className="flex max-h-[164px] justify-between">
+    <div className={`flex justify-between ${!isExpanded ? 'max-h-[164px]' : ''}`}>
       {/* Left side */}
       <div className="flex-1 pr-4 min-w-0">
         {dietaryIcon && (
@@ -62,7 +62,7 @@ const PreviewMenuItemCard = ({ item }: { item: MenuItem }) => {
 
       {/* Right side */}
       <div className="flex-shrink-0 flex flex-col items-center justify-start w-[156px]">
-        <div className="w-[156px] h-[110px] mb-2">
+        <div className="w-[156px] h-[110px] mb-2 rounded-md">
           {item.imageUrl ? (
             <img
               style={{borderRadius:"5px"}}
