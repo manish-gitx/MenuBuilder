@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { ZodError } from 'zod'
 import { Prisma } from '@prisma/client'
+import { Category } from './api'
 
 // API Response types
 export interface ApiResponse<T = any> {
@@ -229,3 +230,48 @@ export function formatMenuResponse(menu: any) {
     // categories: menu.categories?.map(formatCategoryResponse) || []
   }
 } 
+
+const sortByOrder = <T extends { sortOrder: number }>(arr: T[]): T[] => {
+  if (!arr) return [];
+  // Create a shallow copy using the spread operator `[...arr]`
+  // before sorting to avoid modifying the original array.
+  return [...arr].sort((a, b) => a.sortOrder - b.sortOrder);
+};
+
+
+/**
+ * Sorts the entire menu structure recursively: categories, sub-categories, and menu items.
+ * @param categories The raw array of categories from your API.
+ * @returns A new, fully sorted array of categories.
+ */
+export const sortFullMenu = (categories: Category[]): Category[] => {
+  // 1. Sort the top-slevel categories
+  const sortedTopLevelCategories = sortByOrder(categories);
+
+  // 2. Iterate through each sorted category to sort its children
+  return sortedTopLevelCategories.map(category => {
+    // Create a new category object to ensure immutability
+    const newCategory = { ...category };
+
+    // 3. Sort the direct menuItems of the category (if any)
+    if (newCategory.menuItems) {
+      newCategory.menuItems = sortByOrder(newCategory.menuItems);
+    }
+
+    // 4. Sort the childCategories (sub-categories)
+    if (newCategory.childCategories) {
+      const sortedSubCategories = sortByOrder(newCategory.childCategories);
+
+      // 5. For each sub-category, sort its menuItems
+      newCategory.childCategories = sortedSubCategories.map(subCategory => {
+        const newSubCategory = { ...subCategory };
+        if (newSubCategory.menuItems) {
+          newSubCategory.menuItems = sortByOrder(newSubCategory.menuItems);
+        }
+        return newSubCategory;
+      });
+    }
+
+    return newCategory;
+  });
+};

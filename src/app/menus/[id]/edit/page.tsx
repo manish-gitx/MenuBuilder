@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
 import { toast } from "@/components/ui/Toast";
 import { MenuItemCard } from "@/components/ui/MenuItemCard";
+import { sortFullMenu } from "@/lib/utils";
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = React.use(params)
@@ -57,6 +58,8 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     description: ""
   })
 
+
+
   useEffect(() => {
     // Only fetch data if user is authenticated
     if (!userId) return
@@ -67,7 +70,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
           menuId: menuId,
           includeItems: true,
         })
-        setCategories(response.data)
+        setCategories(sortFullMenu(response.data))
         console.log(response.data)
       } catch (error) {
         console.error('Failed to fetch categories:', error)
@@ -502,7 +505,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
         if (currentIndex <= 0) return cat // Already at top
         
         const newSubCategories = [...cat.childCategories]
-        const temp = newSubCategories[currentIndex]
+        const temp = newSubCategories[currentIndex] 
         newSubCategories[currentIndex] = newSubCategories[currentIndex - 1]
         newSubCategories[currentIndex - 1] = temp
         

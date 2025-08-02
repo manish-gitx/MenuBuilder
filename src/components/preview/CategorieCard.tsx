@@ -7,12 +7,49 @@ import PreviewMenuItemCard from "./PreviewMenuItemCard";
 
 interface CategorieCardProps {
   category: Category;
+  isLast:Boolean
   addToCart: (item: MenuItem) => void;
   removeFromCart: (item: MenuItem) => void;
   isInCart: (item: MenuItem) => boolean;
 }
+const SubCategoryCard = ({ category, addToCart, removeFromCart, isInCart,isLast}: SubCategoryCardProps) => {
+  const [isOpen, setIsOpen] = useState(false);
 
-const CategorieCard = ({ category, addToCart, removeFromCart, isInCart }: CategorieCardProps) => {
+  const renderMenuItems = (items: any[]) => {
+    return items.map((item, index) => (
+      <React.Fragment key={item.id}>
+        <PreviewMenuItemCard 
+          item={item} 
+          addToCart={addToCart} 
+          removeFromCart={removeFromCart} 
+          isInCart={isInCart} 
+        />
+        {index < items.length - 1 && (
+          <div
+            className="my-6 border-t-1 w-full mx-0"
+            style={{ borderColor: "rgba(2, 6, 12, 0.15)" }}
+          ></div>
+        )}
+      </React.Fragment>
+    ));
+  };
+
+  return (
+    <div>
+      <div className={`flex justify-between${isOpen ? ' mb-4' : ''}`}>
+        <div className="text-base font-bold">{category.name}</div>
+        <div onClick={() => setIsOpen(!isOpen)} className="cursor-pointer">
+          {isOpen ? <ChevronUp /> : <ChevronDown />}
+        </div>
+      </div>
+      {isOpen && <div>{renderMenuItems(category.menuItems || [])}</div>}
+      {isLast && <div className="py-2"> </div>}
+      
+    </div>
+  );
+};
+
+const CategorieCard = ({ category, addToCart, removeFromCart, isInCart,isLast}: CategorieCardProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const renderMenuItems = (items: any[]) => {
@@ -57,6 +94,9 @@ const CategorieCard = ({ category, addToCart, removeFromCart, isInCart }: Catego
                   addToCart={addToCart} 
                   removeFromCart={removeFromCart} 
                   isInCart={isInCart} 
+                  isLast={category.childCategories.length-1==index
+                  }
+
                 />
                 {index < category.childCategories.length - 1 && (
                    <div
@@ -71,8 +111,8 @@ const CategorieCard = ({ category, addToCart, removeFromCart, isInCart }: Catego
           isOpen && <div>{renderMenuItems(category.menuItems || [])}</div>
         )}
       </div>
-      {(isOpen) && <div className="py-2"></div>}
-      <div className="h-4 border-b-[16px] border-b-[rgba(2,6,12,0.05)]"></div>
+      {(!hasSubCategories && isOpen) && <div className="py-2"></div>}
+      {<div className="h-4 border-b-[16px] border-b-[rgba(2,6,12,0.05)]"></div>}
     </>
   );
 };
@@ -80,43 +120,11 @@ const CategorieCard = ({ category, addToCart, removeFromCart, isInCart }: Catego
 interface SubCategoryCardProps {
   category: Category;
   addToCart: (item: MenuItem) => void;
+  isLast:Boolean,
   removeFromCart: (item: MenuItem) => void;
   isInCart: (item: MenuItem) => boolean;
 }
 
-const SubCategoryCard = ({ category, addToCart, removeFromCart, isInCart }: SubCategoryCardProps) => {
-  const [isOpen, setIsOpen] = useState(false);
 
-  const renderMenuItems = (items: any[]) => {
-    return items.map((item, index) => (
-      <React.Fragment key={item.id}>
-        <PreviewMenuItemCard 
-          item={item} 
-          addToCart={addToCart} 
-          removeFromCart={removeFromCart} 
-          isInCart={isInCart} 
-        />
-        {index < items.length - 1 && (
-          <div
-            className="my-6 border-t-1 w-full mx-0"
-            style={{ borderColor: "rgba(2, 6, 12, 0.15)" }}
-          ></div>
-        )}
-      </React.Fragment>
-    ));
-  };
-
-  return (
-    <div>
-      <div className={`flex justify-between${isOpen ? ' mb-4' : ''}`}>
-        <div className="text-base font-bold">{category.name}</div>
-        <div onClick={() => setIsOpen(!isOpen)} className="cursor-pointer">
-          {isOpen ? <ChevronUp /> : <ChevronDown />}
-        </div>
-      </div>
-      {isOpen && <div>{renderMenuItems(category.menuItems || [])}</div>}
-    </div>
-  );
-};
 
 export default CategorieCard;

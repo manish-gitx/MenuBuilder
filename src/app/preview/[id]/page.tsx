@@ -5,6 +5,7 @@ import { menuApi, Menu, categoryApi, Category, MenuItem } from "../../../lib/api
 import { LoadingScreen } from "../../../components/ui/LoadingScreen";
 import CategorieCard from "@/components/preview/CategorieCard";
 import Cart from "@/components/preview/Cart";
+import { sortFullMenu } from "@/lib/utils";
 
 const Page = () => {
   const params = useParams();
@@ -26,6 +27,7 @@ const Page = () => {
   const isInCart = (item: MenuItem) => {
     return cart.some(cartItem => cartItem.id === item.id);
   };
+  
 
   useEffect(() => {
     const fetchMenu = async () => {
@@ -34,7 +36,7 @@ const Page = () => {
         setError(null);
         const response = await menuApi.getMenuByShareToken(id);
         setMenu(response.data.menu);
-        setCategories(response.data.categories);
+        setCategories(sortFullMenu(response.data.categories));
       } catch (err) {
         console.error("Failed to fetch menu:", err);
         setError("Failed to load menu. Please check the share link.");
@@ -108,8 +110,9 @@ const Page = () => {
         <div className="my-2 border-t-1 w-[calc(100%-32px)] mx-2" style={{ borderColor: "rgba(2, 6, 12, 0.15)" }}></div>
 
         <div>
-          {categories && categories.map(category => (
-            <CategorieCard 
+          {categories && categories.map((category,index)=> (
+            <CategorieCard
+            isLast={categories.length-1==index}
               key={category.id} 
               category={category} 
               addToCart={addToCart} 
