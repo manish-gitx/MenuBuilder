@@ -11,7 +11,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     
     const menu = await prisma.menu.findUnique({
       where: { shareToken: token },
-      include: defaultMenuInclude
+      // include: defaultMenuInclude
     })
     
     if (!menu) {

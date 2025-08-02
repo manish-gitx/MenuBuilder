@@ -24,7 +24,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         id: menuId,
         userId: userId // Ensure user can only access their own menus
       },
-      include: defaultMenuInclude
+      // include: defaultMenuInclude
     })
     
     if (!menu) {

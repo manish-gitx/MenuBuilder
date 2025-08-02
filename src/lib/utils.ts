@@ -226,6 +226,6 @@ export function formatCategoryResponse(category: any) {
 export function formatMenuResponse(menu: any) {
   return {
     ...menu,
-    categories: menu.categories?.map(formatCategoryResponse) || []
+    // categories: menu.categories?.map(formatCategoryResponse) || []
   }
 } 
