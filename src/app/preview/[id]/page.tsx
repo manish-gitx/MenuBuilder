@@ -130,8 +130,9 @@ const[categories,setCategories]=useState<Category[] | null>(null)
 <div className="my-2 border-t-1 w-[calc(100%-32px)] mx-2" style={{ borderColor: "rgba(2, 6, 12, 0.15)" }}></div>
 
         <div>
-          <CategorieCard category={null}/>
-          
+          {categories && categories.map(category => (
+            <CategorieCard key={category.id} category={category} />
+          ))}
         </div>
       </div>
     </div>
