@@ -43,7 +43,7 @@ const SubCategoryCard = ({ category, addToCart, removeFromCart, isInCart,isLast}
         </div>
       </div>
       {isOpen && <div>{renderMenuItems(category.menuItems || [])}</div>}
-      {isLast && <div className="py-2"> </div>}
+      {(isLast && isOpen) && <div className="py-2"> </div>}
       
     </div>
   );
