@@ -84,7 +84,7 @@ const Page = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto pb-24">
-        <div className="px-6 py-8">
+        <div className="px-6 py-4">
           <div className="text-start mb-8">
             <h1 className="text-4xl font-bold text-foreground mb-2">
               {menu.name}
@@ -100,7 +100,7 @@ const Page = () => {
             <div>
               <input
                 type="text"
-                className="h-14 w-full rounded text-center z-0 shadow bg-[rgba(2,6,12,0.05)]"
+                className="h-10 w-full rounded text-center z-0 shadow bg-[rgba(2,6,12,0.05)]"
                 placeholder="Search for dishes"
               />
             </div>

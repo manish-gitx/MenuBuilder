@@ -87,13 +87,13 @@ const PreviewMenuItemCard = ({ item, addToCart, removeFromCart, isInCart }: Prev
       {/* Right side */}
       <div className="flex-shrink-0 w-32 md:w-40">
         <div className="relative">
-          <div className="w-full h-28 md:h-36 mb-2 rounded-md">
+          <div className="w-full h-28 md:h-36 mb-2 rounded-xl">
             {item.imageUrl ? (
               <img
-                style={{borderRadius:"5px"}}
+                style={{borderRadius:"12px"}}
                 src={item.imageUrl}
                 alt={item.name}
-                className="w-full h-full object-scale-down"
+                className="w-full h-full object-cover"
               />
             ) : (
               <div className="w-full h-full bg-gray-200 rounded-md"></div>
