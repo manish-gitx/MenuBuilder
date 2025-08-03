@@ -8,12 +8,13 @@ import PreviewMenuItemCard from "./PreviewMenuItemCard";
 interface CategorieCardProps {
   category: Category;
   isLast:Boolean
+  isInitiallyOpen:Boolean
   addToCart: (item: MenuItem) => void;
   removeFromCart: (item: MenuItem) => void;
   isInCart: (item: MenuItem) => boolean;
 }
-const SubCategoryCard = ({ category, addToCart, removeFromCart, isInCart,isLast}: SubCategoryCardProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+const SubCategoryCard = ({ category, addToCart, removeFromCart, isInCart,isLast,isInitiallyOpen}: SubCategoryCardProps) => {
+  const [isOpen, setIsOpen] = useState(isInitiallyOpen);
 
   const renderMenuItems = (items: any[]) => {
     return items.map((item, index) => (
@@ -49,8 +50,8 @@ const SubCategoryCard = ({ category, addToCart, removeFromCart, isInCart,isLast}
   );
 };
 
-const CategorieCard = ({ category, addToCart, removeFromCart, isInCart,isLast}: CategorieCardProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+const CategorieCard = ({ category, addToCart, removeFromCart, isInCart,isInitiallyOpen,isLast}: CategorieCardProps) => {
+  const [isOpen, setIsOpen] = useState(isInitiallyOpen);
 
   const renderMenuItems = (items: any[]) => {
     return items.map((item, index) => (
@@ -91,6 +92,7 @@ const CategorieCard = ({ category, addToCart, removeFromCart, isInCart,isLast}: 
               <div key={childCategory.id}>
                 <SubCategoryCard 
                   category={childCategory} 
+                  isInitiallyOpen={isInitiallyOpen}
                   addToCart={addToCart} 
                   removeFromCart={removeFromCart} 
                   isInCart={isInCart} 
@@ -121,6 +123,7 @@ interface SubCategoryCardProps {
   category: Category;
   addToCart: (item: MenuItem) => void;
   isLast:Boolean,
+  isInitiallyOpen:Boolean,
   removeFromCart: (item: MenuItem) => void;
   isInCart: (item: MenuItem) => boolean;
 }

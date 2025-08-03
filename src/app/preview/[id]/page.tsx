@@ -85,7 +85,7 @@ const Page = () => {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto pb-24">
         <div className="px-6 py-4">
-          <div className="text-start mb-8">
+          <div className="text-start mb-4">
             <h1 className="text-4xl font-bold text-foreground mb-2">
               {menu.name}
             </h1>
@@ -110,14 +110,15 @@ const Page = () => {
         <div className="my-2 border-t-1 w-[calc(100%-32px)] mx-2" style={{ borderColor: "rgba(2, 6, 12, 0.15)" }}></div>
 
         <div>
-          {categories && categories.map((category,index)=> (
+          {categories && categories.map((category, index) => (
             <CategorieCard
-            isLast={categories.length-1==index}
-              key={category.id} 
-              category={category} 
-              addToCart={addToCart} 
-              removeFromCart={removeFromCart} 
-              isInCart={isInCart} 
+              isInitiallyOpen={index === 0}
+              isLast={categories.length - 1 == index}
+              key={category.id}
+              category={category}
+              addToCart={addToCart}
+              removeFromCart={removeFromCart}
+              isInCart={isInCart}
             />
           ))}
         </div>
