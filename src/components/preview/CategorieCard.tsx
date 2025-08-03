@@ -7,8 +7,8 @@ import PreviewMenuItemCard from "./PreviewMenuItemCard";
 
 interface CategorieCardProps {
   category: Category;
-  isLast:Boolean
-  isInitiallyOpen:Boolean
+  isLast:boolean
+  isInitiallyOpen:boolean
   addToCart: (item: MenuItem) => void;
   removeFromCart: (item: MenuItem) => void;
   isInCart: (item: MenuItem) => boolean;
@@ -122,8 +122,8 @@ const CategorieCard = ({ category, addToCart, removeFromCart, isInCart,isInitial
 interface SubCategoryCardProps {
   category: Category;
   addToCart: (item: MenuItem) => void;
-  isLast:Boolean,
-  isInitiallyOpen:Boolean,
+  isLast:boolean,
+  isInitiallyOpen:boolean,
   removeFromCart: (item: MenuItem) => void;
   isInCart: (item: MenuItem) => boolean;
 }
