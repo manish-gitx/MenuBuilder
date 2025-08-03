@@ -114,7 +114,7 @@ const CategorieCard = ({ category, addToCart, removeFromCart, isInCart,isInitial
         )}
       </div>
       {(!hasSubCategories && isOpen) && <div className="py-2"></div>}
-      {<div className="h-4 border-b-[16px] border-b-[rgba(2,6,12,0.05)]"></div>}
+      {<div className="border-b-[8px] border-b-[rgba(2,6,12,0.05)]"></div>}
     </>
   );
 };
