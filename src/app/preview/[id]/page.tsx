@@ -84,7 +84,7 @@ const Page = () => {
   return (
     <div className="min-h-screen">
       {/* Main container with responsive width */}
-      <div className="container mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 pb-24">
+      <div className="container mx-auto max-w-4xl px-4 sm:px-2 lg:px-8 pb-24">
         {/* Header section */}
         <div className="py-4 sm:py-6">
           <div className="text-start mb-4 sm:mb-6">

@@ -48,7 +48,7 @@ const PreviewMenuItemCard = ({ item, addToCart, removeFromCart, isInCart }: Prev
   };
 
   return (
-    <div className="w-full py-4 px-4 sm:px-6 sm:py-2  last:border-b-0">
+    <div className="w-full py-4 px-4 max-sm:px-0 sm:py-0  last:border-b-0">
       <div className="flex justify-between items-start gap-4 sm:gap-6">
         {/* Left side - Content */}
         <div className="flex-1 min-w-0 pr-4">

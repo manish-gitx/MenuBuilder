@@ -76,7 +76,7 @@ const CategorieCard = ({ category, addToCart, removeFromCart, isInCart,isInitial
 
   return (
     <>
-      <div className="px-6 py-2">
+      <div className="px-3 py-2 sm:px-0 md:px-6">
         <div className="flex justify-between" style={{ marginBottom: ((hasSubCategories) || (isOpen)) ? "1.5rem" : 0 }}>
           <div className="font-bold text-xl">{category.name}</div>
           {!hasSubCategories && (
