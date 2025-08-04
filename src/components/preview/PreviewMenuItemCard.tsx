@@ -100,7 +100,7 @@ const PreviewMenuItemCard = ({ item, addToCart, removeFromCart, isInCart }: Prev
               <img
                 src={item.imageUrl}
                 alt={item.name}
-                className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 object-cover rounded-xl shadow-sm"
+                className="w-32 h-32 sm:w-36 sm:h-36 md:w-40 md:h-40 object-cover rounded-xl shadow-sm"
               />
               <button
                 onClick={handleCartAction}
