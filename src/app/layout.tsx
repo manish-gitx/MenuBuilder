@@ -1,22 +1,20 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ToastProvider } from "@/components/ui/Toast";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Inter font - matches Swiggy's typography
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"], // Full range for precise matching
 });
 
 export const metadata: Metadata = {
   title: "MenuMaker - Beautiful Catering Menus Made Simple",
-  description: "Create stunning digital catering menus in minutes. Professional, shareable, and always up-to-date.",
+  description:
+    "Create stunning digital catering menus in minutes. Professional, shareable, and always up-to-date.",
 };
 
 export const viewport = {
@@ -33,10 +31,8 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-          <main>
-            {children}
-          </main>
+        <body className={`${inter.variable} font-inter antialiased`}>
+          <main>{children}</main>
           <ToastProvider />
         </body>
       </html>

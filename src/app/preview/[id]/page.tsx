@@ -56,10 +56,10 @@ const Page = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-2">Error</h1>
-          <p className="text-muted-foreground">{error}</p>
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-2">Error</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">{error}</p>
         </div>
       </div>
     );
@@ -67,12 +67,12 @@ const Page = () => {
 
   if (!menu) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-2">
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
             Menu Not Found
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             The menu you&apos;re looking for doesn&apos;t exist or the share link is
             invalid.
           </p>
@@ -82,38 +82,50 @@ const Page = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto pb-24">
-        <div className="px-6 py-4">
-          <div className="text-start mb-4">
-            <h1 className="text-4xl font-bold text-foreground mb-2">
+    <div className="min-h-screen">
+      {/* Main container with responsive width */}
+      <div className="container mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 pb-24">
+        {/* Header section */}
+        <div className="py-4 sm:py-6">
+          <div className="text-start mb-4 sm:mb-6">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2">
               {menu.name}
             </h1>
-            {menu.description && <p className="text-lg ">{menu.description}</p>}
+            {menu.description && (
+              <p className="text-base sm:text-lg text-muted-foreground">
+                {menu.description}
+              </p>
+            )}
           </div>
 
-          <div className="flex flex-col gap-4">
-            <div className="text-muted-foreground text-center text-base">
+          {/* Search section */}
+          <div className="flex flex-col gap-3 sm:gap-4">
+            <div className="text-muted-foreground text-center text-sm sm:text-base font-medium">
               MENU
             </div>
 
-            <div>
+            <div className="w-full">
               <input
                 type="text"
-                className="h-10 w-full rounded text-center z-0 shadow bg-[rgba(2,6,12,0.05)]"
+                className="h-10 sm:h-12 w-full rounded-lg text-center shadow-sm bg-[rgba(2,6,12,0.05)] border border-transparent focus:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors text-sm sm:text-base"
                 placeholder="Search for dishes"
               />
             </div>
           </div>
         </div>
 
-        <div className="my-2 border-t-1 w-[calc(100%-32px)] mx-2" style={{ borderColor: "rgba(2, 6, 12, 0.15)" }}></div>
+        {/* Divider */}
+        <div 
+          className="my-4 border-t w-full" 
+          style={{ borderColor: "rgba(2, 6, 12, 0.15)" }}
+        ></div>
 
-        <div>
+        {/* Categories section */}
+        <div className="space-y-2 sm:space-y-4">
           {categories && categories.map((category, index) => (
             <CategorieCard
               isInitiallyOpen={index === 0}
-              isLast={categories.length - 1 == index}
+              isLast={categories.length - 1 === index}
               key={category.id}
               category={category}
               addToCart={addToCart}
@@ -123,6 +135,8 @@ const Page = () => {
           ))}
         </div>
       </div>
+      
+      {/* Cart component - always responsive */}
       {cart.length > 0 && <Cart cart={cart} menuName={menu.name} />}
     </div>
   );
