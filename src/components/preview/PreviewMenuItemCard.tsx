@@ -64,7 +64,7 @@ const PreviewMenuItemCard = ({ item, addToCart, removeFromCart, isInCart }: Prev
           )}
 
           {/* Item name */}
-          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 leading-tight">
+          <h3 className="text-lg sm:text-xl font-bold text-gray-700 mb-2 leading-tight">
             {item.name}
           </h3>
 
