@@ -9,7 +9,10 @@ http://localhost:3000/api
 ```
 
 ## Authentication
-Currently, the API doesn't require authentication. For production, integrate with your preferred authentication system.
+The API uses **Clerk** for authentication. Most endpoints require a valid Clerk session.
+
+- **Protected** (require auth): `/api/menus/*`, `/api/categories/*`, `/api/menu-items/*`
+- **Public** (no auth): `/api/health`, `/api/menus/share/[token]`, `/api/tags` (GET)
 
 ## API Response Format
 All API responses follow this consistent format:
@@ -295,6 +298,22 @@ Update a specific tag.
 #### DELETE /api/tags/[id]
 Delete a specific tag.
 
+### 5. Health Check
+
+#### GET /api/health
+Check service health and database connectivity. No authentication required.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "status": "ok",
+    "database": "connected"
+  }
+}
+```
+
 ## Business Rules
 
 ### Category Hierarchy Rules
@@ -329,6 +348,8 @@ Menu: "Party Catering"
 ## Error Codes
 
 - `400` - Bad Request (validation errors)
+- `401` - Unauthorized (missing or invalid Clerk session)
+- `403` - Forbidden (authenticated but not allowed to access the resource)
 - `404` - Not Found (resource doesn't exist)
 - `409` - Conflict (duplicate data)
 - `500` - Internal Server Error
@@ -441,11 +462,17 @@ The API uses PostgreSQL with the following main tables:
 
 ## Predefined Tags
 
-The system comes with predefined tags in four categories:
-- **Dietary**: Vegetarian, Non-Vegetarian, Vegan, Gluten-Free, etc.
-- **Highlight**: Signature Dish, Chef Special, Popular, New
-- **Spice Level**: Mild, Medium, Spicy
-- **Cuisine**: Indian, Chinese, Italian, Continental, etc.
+The following tags are seeded by `npm run db:seed`:
+
+| Name | Type | Color | Icon |
+|---|---|---|---|
+| Vegetarian | dietary | #4CAF50 | 🥬 |
+| Non-Vegetarian | dietary | #FF5722 | 🍖 |
+| Egg-Based | dietary | #FFC107 | 🥚 |
+| Dairy-Free | dietary | #00BCD4 | 🥛 |
+| Chef Special | highlight | #4ECDC4 | 👨‍🍳 |
+
+Additional tags (cuisine, spice level, etc.) can be created via `POST /api/tags`.
 
 ## License
 
