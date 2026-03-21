@@ -8,10 +8,12 @@ import { Category, MenuItem } from "../../lib/api";
 interface OrderConfirmScreenProps {
   cart: MenuItem[];
   menuName: string;
+  menuId: string;
   storageKey: string;
   onClose: () => void;
   onConfirm: () => void;
   categories: Category[];
+  referralCode?: string;
 }
 
 const ls = {
@@ -20,13 +22,17 @@ const ls = {
   del: (key: string) => { try { localStorage.removeItem(key); } catch {} },
 };
 
+const INDIAN_PHONE_RE = /^[6-9]\d{9}$/;
+
 const OrderConfirmScreen = ({
   cart,
   menuName,
+  menuId,
   storageKey,
   onClose,
   onConfirm,
   categories,
+  referralCode,
 }: OrderConfirmScreenProps) => {
   const eventKey = `mb_event_${storageKey}`;
 
@@ -50,6 +56,8 @@ const OrderConfirmScreen = ({
     if (saved) { try { return JSON.parse(saved).phone ?? ""; } catch {} }
     return "";
   });
+  const [phoneError, setPhoneError] = useState<string>("");
+  const [submitting, setSubmitting] = useState(false);
 
   const [expandedCatId, setExpandedCatId] = useState<string | null>(() => {
     const cartIds = new Set(cart.map(i => i.id));
@@ -93,14 +101,42 @@ const OrderConfirmScreen = ({
 
   const toggleCat = (catId: string) =>
     setExpandedCatId(prev => (prev === catId ? null : catId));
-
   const isCatExpanded = (catId: string) => expandedCatId === catId;
 
-  const generatePdf = () => {
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text(`${menuName} — Order Summary`, 14, 15);
+  const handlePhoneChange = (val: string) => {
+    // Only allow digits, max 10
+    const digits = val.replace(/\D/g, "").slice(0, 10);
+    setPhone(digits);
+    if (digits.length === 0) {
+      setPhoneError("Phone number is required");
+    } else if (!INDIAN_PHONE_RE.test(digits)) {
+      setPhoneError("Enter a valid 10-digit Indian mobile number");
+    } else {
+      setPhoneError("");
+    }
+  };
 
+  const buildPdf = () => {
+    const doc = new jsPDF();
+    const pageW = doc.internal.pageSize.getWidth();
+    const today = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+
+    // ── Header block ──────────────────────────────────────────────
+    doc.setFillColor(24, 24, 43);
+    doc.rect(0, 0, pageW, 42, "F");
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(20);
+    doc.setFont("helvetica", "bold");
+    doc.text(menuName, 14, 18);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(180, 180, 210);
+    doc.text("Order Summary", 14, 27);
+    doc.text(`Generated: ${today}`, 14, 34);
+
+    // ── Items table ───────────────────────────────────────────────
     const rows: string[][] = [];
     for (const { cat, items, subGroups } of categoriesWithCart) {
       if (subGroups.length > 0) {
@@ -119,29 +155,125 @@ const OrderConfirmScreen = ({
     autoTable(doc, {
       head: [["Category", "Sub-category", "Item", "Description"]],
       body: rows,
-      startY: 25,
+      startY: 50,
+      headStyles: {
+        fillColor: [24, 24, 43],
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+        fontSize: 9,
+      },
+      bodyStyles: { fontSize: 9, textColor: [40, 40, 60] },
+      alternateRowStyles: { fillColor: [245, 245, 252] },
+      columnStyles: {
+        0: { cellWidth: 38 },
+        1: { cellWidth: 35 },
+        2: { cellWidth: 45 },
+        3: { cellWidth: "auto" },
+      },
+      margin: { left: 14, right: 14 },
     });
 
-    if (vegGuests > 0 || nonVegGuests > 0 || date || phone) {
-      const finalY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
-      doc.setFontSize(12);
-      doc.text("Event Details", 14, finalY);
-      autoTable(doc, {
-        body: [
-          ["Vegetarian Guests", String(vegGuests)],
-          ["Non-Veg Guests", String(nonVegGuests)],
-          ["Preferred Date", date],
-          ["Phone", phone],
-        ],
-        startY: finalY + 5,
-      });
+    // ── Event details block ───────────────────────────────────────
+    const finalY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+
+    doc.setFillColor(245, 245, 252);
+    doc.roundedRect(14, finalY, pageW - 28, 8, 2, 2, "F");
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(24, 24, 43);
+    doc.text("Event Details", 18, finalY + 5.5);
+
+    autoTable(doc, {
+      body: [
+        ["Vegetarian Guests", String(vegGuests), "Non-Veg Guests", String(nonVegGuests)],
+        ["Preferred Date", date || "—", "Phone", phone],
+        ...(referralCode ? [["Referral Code", referralCode, "", ""]] : []),
+      ],
+      startY: finalY + 12,
+      theme: "plain",
+      bodyStyles: { fontSize: 9, textColor: [40, 40, 60] },
+      columnStyles: {
+        0: { fontStyle: "bold", cellWidth: 42, textColor: [80, 80, 110] },
+        1: { cellWidth: 50 },
+        2: { fontStyle: "bold", cellWidth: 42, textColor: [80, 80, 110] },
+        3: { cellWidth: "auto" },
+      },
+      margin: { left: 14, right: 14 },
+    });
+
+    // ── Footer ────────────────────────────────────────────────────
+    const footerY = doc.internal.pageSize.getHeight() - 10;
+    doc.setFontSize(8);
+    doc.setTextColor(160, 160, 180);
+    doc.setFont("helvetica", "normal");
+    doc.text(`${menuName} · ${today}`, pageW / 2, footerY, { align: "center" });
+
+    return doc;
+  };
+
+  const handleConfirm = async () => {
+    // Validate phone
+    if (!phone || !INDIAN_PHONE_RE.test(phone)) {
+      setPhoneError(phone ? "Enter a valid 10-digit Indian mobile number" : "Phone number is required");
+      const el = document.getElementById("oc-phone-input");
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
     }
 
-    doc.save(`${menuName}_order.pdf`);
-    ls.del(eventKey);
-    ls.del(`mb_cart_${storageKey}`);
-    ls.del(`mb_openCat_${storageKey}`);
-    onConfirm();
+    setSubmitting(true);
+    try {
+      const doc = buildPdf();
+
+      // Save order to DB
+      await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          menuId,
+          menuName,
+          phone,
+          vegGuests,
+          nonVegGuests,
+          date: date || undefined,
+          menuSnapshot: cart,
+          referralCode: referralCode || undefined,
+        }),
+      });
+
+      // Upload PDF to S3 and send WhatsApp (non-blocking)
+      try {
+        const pdfBuf = doc.output("arraybuffer");
+        const filename = `${menuName.replace(/\s+/g, "-")}-${Date.now()}.pdf`;
+        const uploadRes = await fetch("/api/orders/upload-pdf", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            pdf: Array.from(new Uint8Array(pdfBuf)),
+            filename,
+          }),
+        });
+        if (uploadRes.ok) {
+          const { url } = await uploadRes.json();
+          fetch("/api/orders/send-whatsapp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pdfUrl: url, menuName, vegGuests, nonVegGuests, date, phone }),
+          }).catch(() => {});
+        }
+      } catch {
+        // WhatsApp / S3 errors are non-fatal
+      }
+
+      // Download PDF locally
+      doc.save(`${menuName}_order.pdf`);
+
+      ls.del(eventKey);
+      ls.del(`mb_cart_${storageKey}`);
+      ls.del(`mb_openCat_${storageKey}`);
+      onConfirm();
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -190,7 +322,6 @@ const OrderConfirmScreen = ({
                   className="border rounded-[16px] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] overflow-hidden"
                   style={{ backgroundColor: 'var(--preview-surface)', borderColor: 'var(--preview-border-strong)' }}
                 >
-                  {/* Category header */}
                   <button
                     onClick={() => toggleCat(cat.id)}
                     className="w-full border-b px-4 py-4 flex items-center justify-between"
@@ -207,14 +338,12 @@ const OrderConfirmScreen = ({
                         {totalInCat}
                       </span>
                     </div>
-                    {expanded ? (
-                      <ChevronUp style={{ width: 16, height: 16, color: 'var(--preview-text-secondary)' }} />
-                    ) : (
-                      <ChevronDown style={{ width: 16, height: 16, color: 'var(--preview-text-secondary)' }} />
-                    )}
+                    {expanded
+                      ? <ChevronUp style={{ width: 16, height: 16, color: 'var(--preview-text-secondary)' }} />
+                      : <ChevronDown style={{ width: 16, height: 16, color: 'var(--preview-text-secondary)' }} />
+                    }
                   </button>
 
-                  {/* Items */}
                   {expanded && (
                     <div className="max-h-[320px] overflow-y-auto">
                       <div className="gap-6 p-4 flex flex-col">
@@ -286,7 +415,7 @@ const OrderConfirmScreen = ({
                     <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
                   </svg>
                 </div>
-                <span className="text-[16px] font-semibold" style={{ color: 'var(--preview-text-primary)' }}>
+                <span className="text-[15px] font-semibold" style={{ color: 'var(--preview-text-primary)' }}>
                   Vegetarian Guests
                 </span>
               </div>
@@ -298,9 +427,14 @@ const OrderConfirmScreen = ({
                 >
                   −
                 </button>
-                <span className="text-[16px] font-bold min-w-[24px] text-center" style={{ color: 'var(--preview-text-primary)' }}>
-                  {vegGuests}
-                </span>
+                <input
+                  type="number"
+                  min="0"
+                  value={vegGuests}
+                  onChange={e => setVegGuests(Math.max(0, parseInt(e.target.value) || 0))}
+                  className="w-[48px] text-center text-[16px] font-bold bg-transparent outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  style={{ color: 'var(--preview-text-primary)' }}
+                />
                 <button
                   onClick={() => setVegGuests(v => v + 1)}
                   className="size-[32px] rounded-full flex items-center justify-center font-bold text-[16px]"
@@ -324,7 +458,7 @@ const OrderConfirmScreen = ({
                     <path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7" />
                   </svg>
                 </div>
-                <span className="text-[16px] font-semibold" style={{ color: 'var(--preview-text-primary)' }}>
+                <span className="text-[15px] font-semibold" style={{ color: 'var(--preview-text-primary)' }}>
                   Non-Veg Guests
                 </span>
               </div>
@@ -336,9 +470,14 @@ const OrderConfirmScreen = ({
                 >
                   −
                 </button>
-                <span className="text-[16px] font-bold min-w-[24px] text-center" style={{ color: 'var(--preview-text-primary)' }}>
-                  {nonVegGuests}
-                </span>
+                <input
+                  type="number"
+                  min="0"
+                  value={nonVegGuests}
+                  onChange={e => setNonVegGuests(Math.max(0, parseInt(e.target.value) || 0))}
+                  className="w-[48px] text-center text-[16px] font-bold bg-transparent outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  style={{ color: 'var(--preview-text-primary)' }}
+                />
                 <button
                   onClick={() => setNonVegGuests(v => v + 1)}
                   className="size-[32px] rounded-full flex items-center justify-center font-bold text-[16px]"
@@ -380,11 +519,14 @@ const OrderConfirmScreen = ({
           {/* Contact Info */}
           <div className="flex flex-col gap-3">
             <span className="text-[10px] font-bold uppercase tracking-[1px] px-2" style={{ color: 'var(--preview-text-secondary)' }}>
-              Contact Info
+              Contact Info <span style={{ color: '#dc2626' }}>*</span>
             </span>
             <div
               className="border rounded-[16px] relative"
-              style={{ backgroundColor: 'var(--preview-surface)', borderColor: 'var(--preview-border-strong)' }}
+              style={{
+                backgroundColor: 'var(--preview-surface)',
+                borderColor: phoneError ? '#dc2626' : 'var(--preview-border-strong)',
+              }}
             >
               <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--preview-text-secondary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -392,14 +534,21 @@ const OrderConfirmScreen = ({
                 </svg>
               </div>
               <input
+                id="oc-phone-input"
                 type="tel"
+                inputMode="numeric"
                 value={phone}
-                onChange={e => setPhone(e.target.value)}
-                placeholder="Phone Number"
+                onChange={e => handlePhoneChange(e.target.value)}
+                placeholder="10-digit mobile number"
                 className="w-full pl-[49px] pr-[17px] py-[17px] text-[16px] bg-transparent outline-none rounded-[16px]"
                 style={{ color: 'var(--preview-text-primary)' }}
               />
             </div>
+            {phoneError && (
+              <span className="text-[12px] px-2" style={{ color: '#dc2626' }}>
+                {phoneError}
+              </span>
+            )}
           </div>
         </section>
       </div>
@@ -410,11 +559,12 @@ const OrderConfirmScreen = ({
         style={{ backgroundColor: 'var(--preview-confirm-bar-bg)', borderColor: 'var(--preview-border-strong)' }}
       >
         <button
-          onClick={generatePdf}
-          className="rounded-[16px] w-full py-4 text-[18px] font-bold text-center shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.15),0px_4px_6px_-4px_rgba(0,0,0,0.1)]"
+          onClick={handleConfirm}
+          disabled={submitting}
+          className="rounded-[16px] w-full py-4 text-[18px] font-bold text-center shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.15),0px_4px_6px_-4px_rgba(0,0,0,0.1)] disabled:opacity-60"
           style={{ backgroundColor: 'var(--preview-accent)', color: 'var(--preview-accent-text)' }}
         >
-          Confirm Request
+          {submitting ? "Processing…" : "Confirm Request"}
         </button>
       </div>
     </div>

@@ -65,4 +65,21 @@ export const getSignedUrl = (key: string, expires: number = 3600): string => {
     Key: key,
     Expires: expires
   })
-} 
+}
+
+// Upload a PDF buffer to S3 and return its public URL
+export const uploadPdfToS3 = async (buffer: ArrayBuffer, filename: string): Promise<string> => {
+  const bucket = process.env.AWS_S3_BUCKET_NAME || 'menu-catering'
+  const key = `orders/${filename}`
+
+  await s3.putObject({
+    Bucket: bucket,
+    Key: key,
+    Body: Buffer.from(buffer),
+    ContentType: 'application/pdf',
+    ACL: 'public-read',
+  }).promise()
+
+  const region = process.env.AWS_REGION || 'us-east-1'
+  return `https://${bucket}.s3.${region}.amazonaws.com/${key}`
+}

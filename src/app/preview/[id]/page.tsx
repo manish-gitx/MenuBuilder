@@ -1,6 +1,6 @@
 "use client"
 import React, { useEffect, useState, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { menuApi, Menu, Category, MenuItem } from "../../../lib/api";
 import { LoadingScreen } from "../../../components/ui/LoadingScreen";
 import ThemeRenderer from "@/components/preview/ThemeRenderer";
@@ -30,11 +30,13 @@ const getTotalItemCount = (category: Category): number => {
 
 const Page = () => {
   const params = useParams();
+  const searchParams = useSearchParams();
   const id = params.id as string;
 
   const CART_KEY = `mb_cart_${id}`;
   const CAT_KEY = `mb_openCat_${id}`;
   const SEARCH_KEY = `mb_searches`;
+  const REF_KEY = `mb_ref_${id}`;
 
   const [menu, setMenu] = useState<Menu | null>(null);
   const [categories, setCategories] = useState<Category[] | null>(null);
@@ -64,6 +66,12 @@ const Page = () => {
   const removeFromCart = (item: MenuItem) =>
     setCart(prev => prev.filter(c => c.id !== item.id));
   const isInCart = (item: MenuItem) => cart.some(c => c.id === item.id);
+
+  // Store referral code from URL param
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (ref) ls.set(REF_KEY, ref);
+  }, [searchParams, REF_KEY]);
 
   // Persist cart
   useEffect(() => {
@@ -304,6 +312,7 @@ const Page = () => {
           <OrderConfirmScreen
             cart={cart}
             menuName={menu.name}
+            menuId={menu.id}
             storageKey={id}
             onClose={() => setShowConfirm(false)}
             onConfirm={() => {
@@ -312,6 +321,7 @@ const Page = () => {
               setShowConfirm(false);
             }}
             categories={categories ?? []}
+            referralCode={ls.get(REF_KEY) ?? undefined}
           />
         </div>
       )}

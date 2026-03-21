@@ -28,8 +28,40 @@ model Menu {
 
   // Relations
   categories Category[]
+  orders     Order[]
 
   @@map("menus")
+}
+
+model Order {
+  id           String   @id @default(uuid())
+  menuId       String
+  menuName     String
+  phone        String
+  vegGuests    Int      @default(0)
+  nonVegGuests Int      @default(0)
+  date         String?
+  menuSnapshot Json
+  referralCode String?
+  createdAt    DateTime @default(now())
+
+  menu     Menu      @relation(fields: [menuId], references: [id])
+  referrer Referrer? @relation(fields: [referralCode], references: [code])
+
+  @@map("orders")
+}
+
+model Referrer {
+  id           String   @id @default(uuid())
+  name         String
+  phone        String
+  code         String   @unique
+  rewardAmount Float    @default(0)
+  createdAt    DateTime @default(now())
+
+  orders Order[]
+
+  @@map("referrers")
 }
 
 model Category {

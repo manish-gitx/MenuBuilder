@@ -121,15 +121,23 @@ export default function Dashboard() {
               <div className="text-2xl font-bold text-primary">Dashboard</div>
               {/* <div className="text-sm text-muted-foreground">Dashboard</div> */}
             </div>
-            <UserButton 
-              showName 
-              appearance={{
-                elements: {
-                  avatarBox: "h-10 w-10",
-                  userButtonPopoverCard: "shadow-warm",
-                }
-              }}
-            />
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.push('/admin')}
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Admin
+              </button>
+              <UserButton
+                showName
+                appearance={{
+                  elements: {
+                    avatarBox: "h-10 w-10",
+                    userButtonPopoverCard: "shadow-warm",
+                  }
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
