@@ -55,7 +55,6 @@ const Page = () => {
     return [];
   });
   const [hasScrolled, setHasScrolled] = useState(false);
-  const [passedCategoryHeader, setPassedCategoryHeader] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -87,21 +86,10 @@ const Page = () => {
     if (!container) return;
     const handleScroll = () => {
       setHasScrolled(container.scrollTop > 10);
-      // Check if we've scrolled past the toggled category's header
-      if (openCategoryId) {
-        const el = document.getElementById(`category-${openCategoryId}`);
-        if (el && container) {
-          const containerTop = container.getBoundingClientRect().top;
-          const elBottom = el.querySelector("button")?.getBoundingClientRect().bottom ?? el.getBoundingClientRect().bottom;
-          setPassedCategoryHeader(elBottom - containerTop < 0);
-        }
-      } else {
-        setPassedCategoryHeader(false);
-      }
     };
     container.addEventListener("scroll", handleScroll, { passive: true });
     return () => container.removeEventListener("scroll", handleScroll);
-  }, [loading, openCategoryId]);
+  }, [loading]);
 
   // Measure header height so scroll container padding stays correct
   useEffect(() => {
@@ -180,15 +168,15 @@ const Page = () => {
       {/* ── Header ── */}
       <div
         ref={headerRef}
-        className="fixed top-0 left-0 right-0 z-40 backdrop-blur-[6px] border-b px-4 min-[390px]:px-6"
+        className="z-40 backdrop-blur-[6px] border-b px-4 min-[390px]:px-6 flex-shrink-0"
         style={{ backgroundColor: 'var(--preview-surface-muted)', borderColor: 'var(--preview-border)' }}
       >
         {hasScrolled ? (
-          /* Scrolled state: search bar + optional category name */
-          <div className="py-4 flex flex-col gap-2">
+          /* Scrolled state: search bar */
+          <div className="py-4">
             <button
               onClick={() => setShowSearch(true)}
-              className="flex items-center gap-2 flex-1 rounded-full px-4 py-2"
+              className="flex items-center gap-2 w-full rounded-full px-4 py-2"
               style={{ backgroundColor: 'var(--preview-surface-low)' }}
               aria-label="Search"
             >
@@ -200,16 +188,6 @@ const Page = () => {
                 Search dishes...
               </span>
             </button>
-            <div className={`grid transition-[grid-template-rows] duration-200 ease-out ${passedCategoryHeader && openCategoryId ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
-              <div className="overflow-hidden">
-                <div className="flex items-center gap-2 px-1 pb-0.5">
-                  <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: 'var(--preview-accent)' }} />
-                  <span className="text-[15px] min-[390px]:text-base font-extrabold tracking-[-0.3px] truncate" style={{ color: 'var(--preview-text-primary)' }}>
-                    {categories?.find(c => c.id === openCategoryId)?.name ?? ''}
-                  </span>
-                </div>
-              </div>
-            </div>
           </div>
         ) : (
           /* Default state: restaurant name + search icon */
@@ -238,10 +216,10 @@ const Page = () => {
         ref={scrollRef}
         className="flex-1 overflow-y-auto pb-32"
         style={{
-          paddingTop: headerHeight > 0 ? `${headerHeight}px` : 'var(--preview-scroll-pt)',
           paddingLeft: 'var(--preview-scroll-px)',
           paddingRight: 'var(--preview-scroll-px)',
-        }}
+          ['--sticky-top' as string]: '0px',
+        } as React.CSSProperties}
       >
         {categories && (
           <ThemeRenderer
@@ -250,11 +228,7 @@ const Page = () => {
             openCategoryId={openCategoryId}
             onToggleCategory={(id) => {
               setOpenCategoryId(prev => {
-                if (prev === id) {
-                  setPassedCategoryHeader(false);
-                  return null;
-                }
-                setPassedCategoryHeader(false);
+                if (prev === id) return null;
                 setTimeout(() => {
                   const el = document.getElementById(`category-${id}`);
                   if (el && scrollRef.current) {
