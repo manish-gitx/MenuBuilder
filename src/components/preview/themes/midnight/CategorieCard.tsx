@@ -36,12 +36,12 @@ const CategorieCard = ({
       {/* Category header */}
       <button
         onClick={onToggle}
-        className="w-full border-b py-[16px] px-[8px] flex items-center justify-between"
+        className="w-full border-b py-[14px] min-[390px]:py-[16px] px-[8px] flex items-center justify-between gap-2"
         style={{ borderColor: 'var(--preview-border)', backgroundColor: 'var(--preview-bg)' }}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-start gap-2 min-w-0 flex-1">
           <span
-            className="text-[18px] font-semibold leading-[28px]"
+            className="text-[15px] min-[390px]:text-[17px] min-[430px]:text-[18px] sm:text-lg md:text-xl font-semibold leading-snug min-w-0  truncate"
             style={{
               color: 'var(--preview-text-primary)',
               textTransform: 'var(--preview-cat-name-transform)' as React.CSSProperties['textTransform'],
@@ -51,7 +51,7 @@ const CategorieCard = ({
             {category.name}
           </span>
           <span
-            className="px-[8px] py-[2px] text-[12px] font-normal leading-[16px]"
+            className="flex-shrink-0 px-[8px] py-[2px] text-[9px] min-[390px]:text-[10px] sm:text-xs md:text-sm font-normal leading-[16px] mt-[3px]"
             style={{
               backgroundColor: 'var(--preview-surface-low)',
               color: 'var(--preview-text-secondary)',
@@ -61,15 +61,17 @@ const CategorieCard = ({
             {totalCount}
           </span>
         </div>
-        {isOpen ? (
-          <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
-            <path d="M1 7L6 2L11 7" stroke="var(--preview-text-secondary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        ) : (
-          <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
-            <path d="M1 1L6 6L11 1" stroke="var(--preview-text-secondary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        )}
+        <div className="flex-shrink-0">
+          {isOpen ? (
+            <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
+              <path d="M1 7L6 2L11 7" stroke="var(--preview-text-secondary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          ) : (
+            <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
+              <path d="M1 1L6 6L11 1" stroke="var(--preview-text-secondary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </div>
       </button>
 
       {/* Items container */}
@@ -89,7 +91,7 @@ const CategorieCard = ({
                     {/* Sub-cat label */}
                     <div className="px-[8px] pt-[24px] pb-[12px]" style={{ backgroundColor: 'var(--preview-bg)' }}>
                       <span
-                        className="text-[12px] font-normal uppercase"
+                        className="text-xs sm:text-[13px] md:text-sm font-normal uppercase"
                         style={{
                           color: isNonVeg ? '#ffb4ab' : isVeg(subItems) ? '#86efac' : 'var(--preview-accent)',
                           letterSpacing: 'var(--preview-subcat-tracking)',

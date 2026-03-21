@@ -47,9 +47,9 @@ const PreviewMenuItemCard = ({
   const inCart = isInCart(item);
 
   return (
-    <div className="bg-white border border-[rgba(172,179,184,0.05)] rounded-[16px] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] p-[13px] flex gap-4 items-start w-full">
+    <div className="bg-white border border-[rgba(172,179,184,0.05)] rounded-[16px] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] p-[10px] min-[390px]:p-[13px] flex gap-3 min-[390px]:gap-4 items-start w-full overflow-hidden">
       {/* LEFT: image */}
-      <div className="flex-shrink-0 w-[96px] h-[96px] rounded-[12px] bg-[#ebeef2] overflow-hidden">
+      <div className="flex-shrink-0 w-[80px] h-[80px] min-[390px]:w-[96px] min-[390px]:h-[96px] rounded-[12px] bg-[#ebeef2] overflow-hidden">
         {item.imageUrl ? (
           <img
             src={item.imageUrl}
@@ -71,7 +71,7 @@ const PreviewMenuItemCard = ({
       <div className="flex-1 flex flex-col justify-between self-stretch min-w-0">
         {/* Top row: name + add button */}
         <div className="flex items-start gap-2">
-          <p className="text-[14px] font-bold text-[#2d3338] leading-[20px] flex-1 min-w-0">
+          <p className="text-sm sm:text-[15px] md:text-base font-bold text-[#2d3338] leading-[20px] flex-1 min-w-0">
             {item.name}
           </p>
           <button
@@ -91,14 +91,14 @@ const PreviewMenuItemCard = ({
           <div className="mt-[4px]">
             <p
               ref={descriptionRef}
-              className={`text-[11px] text-[#596065] leading-[15.13px] ${!isExpanded ? "line-clamp-2" : ""}`}
+              className={`text-[11px] sm:text-xs md:text-[13px] text-[#596065] leading-[15.13px] ${!isExpanded ? "line-clamp-2" : ""}`}
             >
               {item.description}
             </p>
             {(isOverflowing || isExpanded) && (
               <button
                 onClick={() => setIsExpanded(e => !e)}
-                className="text-[10px] font-bold text-[#a04100] mt-[2px]"
+                className="text-[10px] sm:text-[11px] md:text-xs font-bold text-[#a04100] mt-[2px]"
               >
                 {isExpanded ? "Show less" : "Show more"}
               </button>
@@ -111,7 +111,7 @@ const PreviewMenuItemCard = ({
           <div className="mt-[8px] flex gap-1 flex-wrap">
             {dietaryTag && (
               <span
-                className="inline-flex items-center bg-[#e4e9ee] rounded-[6px] px-[8px] py-[2px] text-[9px] font-bold uppercase"
+                className="inline-flex items-center bg-[#e4e9ee] rounded-[6px] px-[8px] py-[2px] text-[9px] sm:text-[10px] md:text-[11px] font-bold uppercase"
                 style={{
                   color: isNonVeg ? "#b91c1c" : isVeg ? "#15803d" : "#596065",
                 }}
@@ -122,7 +122,7 @@ const PreviewMenuItemCard = ({
             {highlightTags.map(tag => (
               <span
                 key={tag.id}
-                className="inline-flex items-center bg-[#e4e9ee] rounded-[6px] px-[8px] py-[2px] text-[9px] font-bold text-[#596065] uppercase"
+                className="inline-flex items-center bg-[#e4e9ee] rounded-[6px] px-[8px] py-[2px] text-[9px] sm:text-[10px] md:text-[11px] font-bold text-[#596065] uppercase"
               >
                 {tag.name}
               </span>
