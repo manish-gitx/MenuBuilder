@@ -174,7 +174,7 @@ const SearchScreen = ({
                 >
                   {group.categoryName}
                 </p>
-                <div className="flex flex-col gap-3 max-h-[360px] overflow-y-auto">
+                <div className="flex flex-col gap-3">
                   {group.items.map(item => (
                     <PreviewMenuItemCard
                       key={item.id}
