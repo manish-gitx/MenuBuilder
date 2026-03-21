@@ -36,25 +36,27 @@ const CategorieCard = ({
       {/* Category header */}
       <button
         onClick={onToggle}
-        className="w-full bg-[#f9f9fb] border-b border-[rgba(172,179,184,0.05)] py-3 px-6 flex items-center justify-between"
+        className="w-full bg-[#f9f9fb] border-b border-[rgba(172,179,184,0.05)] py-3 px-4 min-[390px]:px-6 flex items-center justify-between gap-2"
       >
-        <div className="flex items-center gap-2">
-          <span className="text-[18px] font-black text-[#2d3338] tracking-[-0.45px] leading-[28px]">
+        <div className="flex items-start gap-2 min-w-0 flex-1">
+          <span className="text-[15px] min-[390px]:text-[17px] min-[430px]:text-[18px] sm:text-lg md:text-xl font-black text-[#2d3338] tracking-[-0.45px] leading-snug min-w-0  truncate">
             {category.name}
           </span>
-          <span className="bg-[#ebeef2] rounded-[4px] px-2 py-[2px] text-[10px] font-medium text-[rgba(89,96,101,0.6)] uppercase tracking-[1px] leading-[28px]">
+          <span className="flex-shrink-0 bg-[#ebeef2] rounded-[4px] px-2 py-[2px] text-[9px] min-[390px]:text-[10px] sm:text-[11px] md:text-xs font-medium text-[rgba(89,96,101,0.6)] uppercase tracking-[1px] mt-[3px]">
             {totalCount} Items
           </span>
         </div>
-        {isOpen ? (
-          <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
-            <path d="M1 7L6 2L11 7" stroke="#596065" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        ) : (
-          <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
-            <path d="M1 1L6 6L11 1" stroke="#596065" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        )}
+        <div className="flex-shrink-0">
+          {isOpen ? (
+            <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
+              <path d="M1 7L6 2L11 7" stroke="#596065" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          ) : (
+            <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
+              <path d="M1 1L6 6L11 1" stroke="#596065" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </div>
       </button>
 
       {/* Items container */}
@@ -72,13 +74,13 @@ const CategorieCard = ({
                 return (
                   <div key={subCat.id} id={`subcategory-${subCat.id}`} className="relative">
                     {/* Sub-cat header */}
-                    <div className="backdrop-blur-[2px] bg-[rgba(242,244,246,0.95)] border-b border-[rgba(172,179,184,0.05)] py-2 px-6 flex items-center gap-1">
+                    <div className="backdrop-blur-[2px] bg-[rgba(242,244,246,0.95)] border-b border-[rgba(172,179,184,0.05)] py-2 px-4 flex items-center gap-1">
                       <div
                         className="size-[6px] rounded-full flex-shrink-0"
                         style={{ backgroundColor: isNonVeg ? "#dc2626" : "#16a34a" }}
                       />
                       <span
-                        className="text-[10px] font-extrabold uppercase tracking-[1px]"
+                        className="text-[10px] sm:text-[11px] md:text-xs font-extrabold uppercase tracking-[1px]"
                         style={{ color: isNonVeg ? "#b91c1c" : "#15803d" }}
                       >
                         {subCat.name}

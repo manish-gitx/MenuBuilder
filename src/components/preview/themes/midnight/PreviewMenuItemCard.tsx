@@ -43,12 +43,12 @@ const PreviewMenuItemCard = ({
 
   return (
     <div
-      className="relative flex gap-[16px] items-start overflow-hidden p-[16px] w-full"
+      className="relative flex gap-[10px] min-[390px]:gap-[16px] items-start overflow-hidden p-[12px] min-[390px]:p-[16px] w-full"
       style={{ backgroundColor: 'var(--preview-surface)', borderRadius: '8px' }}
     >
       {/* Image — square, small radius */}
       <div
-        className="flex-shrink-0 w-[96px] h-[96px] overflow-hidden rounded-[4px]"
+        className="flex-shrink-0 w-[80px] h-[80px] min-[390px]:w-[96px] min-[390px]:h-[96px] overflow-hidden rounded-[4px]"
         style={{ backgroundColor: 'var(--preview-image-placeholder)' }}
       >
         {item.imageUrl ? (
@@ -67,7 +67,7 @@ const PreviewMenuItemCard = ({
       {/* Content — right padding avoids button overlap */}
       <div className="flex-1 flex flex-col gap-[8px] min-w-0 pr-[40px]">
         <p
-          className="text-[14px] font-bold leading-[20px]"
+          className="text-sm sm:text-[15px] md:text-base font-bold leading-[20px]"
           style={{ color: 'var(--preview-text-primary)', letterSpacing: '-0.35px' }}
         >
           {item.name}
@@ -77,7 +77,7 @@ const PreviewMenuItemCard = ({
           <div>
             <p
               ref={descriptionRef}
-              className={`text-[12px] leading-[19.5px] ${!isExpanded ? "line-clamp-2" : ""}`}
+              className={`text-xs sm:text-[13px] md:text-sm leading-[19.5px] ${!isExpanded ? "line-clamp-2" : ""}`}
               style={{ color: 'var(--preview-text-secondary)' }}
             >
               {item.description}
@@ -85,7 +85,7 @@ const PreviewMenuItemCard = ({
             {(isOverflowing || isExpanded) && (
               <button
                 onClick={() => setIsExpanded(e => !e)}
-                className="text-[10px] font-semibold mt-[2px] uppercase tracking-[1px]"
+                className="text-[10px] sm:text-[11px] md:text-xs font-semibold mt-[2px] uppercase tracking-[1px]"
                 style={{ color: 'var(--preview-accent)' }}
               >
                 {isExpanded ? "Show less" : "Show more"}
@@ -99,7 +99,7 @@ const PreviewMenuItemCard = ({
           <div className="flex gap-[8px] flex-wrap pt-[4px]">
             {dietaryTag && (
               <span
-                className="inline-flex items-center border px-[9px] py-[3px] text-[9px] font-semibold uppercase rounded-[2px]"
+                className="inline-flex items-center border px-[9px] py-[3px] text-[9px] sm:text-[10px] md:text-[11px] font-semibold uppercase rounded-[2px]"
                 style={{
                   backgroundColor: isNonVeg ? 'rgba(147,0,10,0.2)' : isVeg ? 'rgba(0,100,20,0.15)' : 'rgba(255,224,190,0.1)',
                   borderColor: isNonVeg ? 'rgba(255,180,171,0.2)' : isVeg ? 'rgba(134,239,172,0.2)' : 'rgba(255,185,90,0.2)',
@@ -113,7 +113,7 @@ const PreviewMenuItemCard = ({
             {highlightTags.map(tag => (
               <span
                 key={tag.id}
-                className="inline-flex items-center border px-[9px] py-[3px] text-[9px] font-semibold uppercase rounded-[2px]"
+                className="inline-flex items-center border px-[9px] py-[3px] text-[9px] sm:text-[10px] md:text-[11px] font-semibold uppercase rounded-[2px]"
                 style={{
                   backgroundColor: 'rgba(255,224,190,0.1)',
                   borderColor: 'rgba(255,185,90,0.2)',

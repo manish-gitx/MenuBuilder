@@ -145,16 +145,9 @@ const Page = () => {
         className="fixed top-0 left-0 right-0 z-40 backdrop-blur-[6px] border-b py-4 px-6 flex items-center justify-between"
         style={{ backgroundColor: 'var(--preview-surface-muted)', borderColor: 'var(--preview-border)' }}
       >
-        {/* Left: hamburger + restaurant name */}
-        <div className="flex items-center gap-3">
-          <button className="flex-shrink-0" aria-label="Open menu">
-            <svg width="18" height="12" viewBox="0 0 18 12" fill="none">
-              <rect x="0" y="0" width="18" height="2" rx="1" fill="var(--preview-text-primary)" />
-              <rect x="0" y="5" width="18" height="2" rx="1" fill="var(--preview-text-primary)" />
-              <rect x="0" y="10" width="18" height="2" rx="1" fill="var(--preview-text-primary)" />
-            </svg>
-          </button>
-          <span className="text-[20px] font-bold tracking-[-0.5px]" style={{ color: 'var(--preview-text-primary)' }}>
+        {/* Left: restaurant name */}
+        <div className="flex gap-2 min-w-0 flex-1 mr-3">
+          <span className="text-[17px] min-[390px]:text-[19px] sm:text-xl md:text-[22px] font-bold tracking-[-0.5px] truncate min-w-0" style={{ color: 'var(--preview-text-primary)' }}>
             {menu.name}
           </span>
         </div>
