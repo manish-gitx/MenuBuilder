@@ -1,6 +1,6 @@
 "use client"
 import React from "react";
-import { Category, MenuItem } from "../../lib/api";
+import { Category, MenuItem } from "../../../../lib/api";
 import PreviewMenuItemCard from "./PreviewMenuItemCard";
 
 interface CategorieCardProps {

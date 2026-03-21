@@ -4,13 +4,15 @@ import { z } from 'zod'
 export const createMenuSchema = z.object({
   name: z.string().min(1, 'Name is required').max(255, 'Name must be less than 255 characters'),
   description: z.string().optional(),
-  isPublic: z.boolean().optional()
+  isPublic: z.boolean().optional(),
+  theme: z.string().optional(),
 })
 
 export const updateMenuSchema = z.object({
   name: z.string().min(1, 'Name is required').max(255, 'Name must be less than 255 characters').optional(),
   description: z.string().optional(),
-  isPublic: z.boolean().optional()
+  isPublic: z.boolean().optional(),
+  theme: z.string().optional(),
 })
 
 // Category validation schemas

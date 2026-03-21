@@ -1,9 +1,16 @@
 import { Menu } from '@/lib/api'
 import { Button } from '@/components/ui/Button'
-import { EllipsisVerticalIcon, EyeIcon, PencilIcon, TrashIcon, ShareIcon } from '@heroicons/react/24/outline'
+import { EllipsisVerticalIcon, EyeIcon, PencilIcon, TrashIcon, ShareIcon, CheckIcon, SwatchIcon } from '@heroicons/react/24/outline'
 import { Menu as HeadlessMenu, Transition } from '@headlessui/react'
 import { Fragment } from 'react'
 import { clsx } from 'clsx'
+import { THEME_META, ThemeId } from '@/lib/themes'
+
+const THEME_OPTIONS = Object.entries(THEME_META).map(([id, meta]) => ({
+  id: id as ThemeId,
+  label: meta.label,
+  swatch: meta.swatch,
+}))
 
 interface MenuCardProps {
   menu: Menu
@@ -11,9 +18,10 @@ interface MenuCardProps {
   onDelete: (menu: Menu) => void
   onShare: (menu: Menu) => void
   onPreview: (menu: Menu) => void
+  onThemeChange: (menu: Menu, themeId: string) => void
 }
 
-export function MenuCard({ menu, onEdit, onDelete, onShare, onPreview }: MenuCardProps) {
+export function MenuCard({ menu, onEdit, onDelete, onShare, onPreview, onThemeChange }: MenuCardProps) {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -100,7 +108,41 @@ export function MenuCard({ menu, onEdit, onDelete, onShare, onPreview }: MenuCar
                 </HeadlessMenu.Item>
                 
                 <div className="border-t border-border my-1" />
-                
+
+                {/* Theme picker */}
+                <div className="px-3 py-1">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+                    <SwatchIcon className="w-3.5 h-3.5" />
+                    Theme
+                  </div>
+                  <div className="flex gap-1.5">
+                    {THEME_OPTIONS.map(opt => (
+                      <button
+                        key={opt.id}
+                        onClick={() => onThemeChange(menu, opt.id)}
+                        title={opt.label}
+                        className={clsx(
+                          'flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors border',
+                          (menu.theme ?? 'default') === opt.id
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-border text-muted-foreground hover:bg-accent'
+                        )}
+                      >
+                        <span
+                          className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: opt.swatch }}
+                        />
+                        {opt.label}
+                        {(menu.theme ?? 'default') === opt.id && (
+                          <CheckIcon className="w-3 h-3 ml-0.5" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t border-border my-1" />
+
                 <HeadlessMenu.Item>
                   {({ active }) => (
                     <button
@@ -122,7 +164,7 @@ export function MenuCard({ menu, onEdit, onDelete, onShare, onPreview }: MenuCar
       </div>
 
       {/* Stats */}
-      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-6">
+      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-6 flex-wrap">
         <span>{menu._count?.categories || 0} categories</span>
         <span>•</span>
         <span>Created {formatDate(menu.createdAt)}</span>
@@ -130,6 +172,18 @@ export function MenuCard({ menu, onEdit, onDelete, onShare, onPreview }: MenuCar
           <>
             <span>•</span>
             <span className="text-primary font-medium">Public</span>
+          </>
+        )}
+        {(menu.theme ?? 'default') !== 'default' && (
+          <>
+            <span>•</span>
+            <span className="flex items-center gap-1 font-medium">
+              <span
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: THEME_META[menu.theme as ThemeId]?.swatch ?? '#a04100' }}
+              />
+              {THEME_META[menu.theme as ThemeId]?.label ?? menu.theme}
+            </span>
           </>
         )}
       </div>

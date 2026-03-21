@@ -3,11 +3,14 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import { menuApi, Menu, Category, MenuItem } from "../../../lib/api";
 import { LoadingScreen } from "../../../components/ui/LoadingScreen";
-import CategorieCard from "@/components/preview/CategorieCard";
+import ThemeRenderer from "@/components/preview/ThemeRenderer";
+import ThemeChrome from "@/components/preview/ThemeChrome";
 import SearchScreen from "@/components/preview/SearchScreen";
 import OrderConfirmScreen from "@/components/preview/OrderConfirmScreen";
 import CategorySelectModal from "@/components/preview/CategorySelectModal";
 import { sortFullMenu } from "@/lib/utils";
+import { getTheme } from "@/lib/themes";
+import { PreviewThemeContext } from "@/contexts/PreviewThemeContext";
 
 const ls = {
   get: (key: string) => { try { return localStorage.getItem(key); } catch { return null; } },
@@ -129,21 +132,29 @@ const Page = () => {
     );
   }
 
+  const { id: themeId, tokens } = getTheme(menu.theme ?? 'default')
+
   return (
-    <div className="h-screen bg-[#f9f9fb] flex flex-col overflow-hidden">
+    <PreviewThemeContext.Provider value={{ themeId }}>
+    <div
+      className="h-screen flex flex-col overflow-hidden"
+      style={{ ...(tokens as React.CSSProperties), backgroundColor: 'var(--preview-bg)', fontFamily: 'var(--preview-font-family)' }}
+    >
       {/* ── Header ── */}
-      <div className="fixed top-0 left-0 right-0 z-40 backdrop-blur-[6px] bg-[rgba(249,249,251,0.95)] border-b border-[rgba(172,179,184,0.1)] py-4 px-6 flex items-center justify-between">
+      <div
+        className="fixed top-0 left-0 right-0 z-40 backdrop-blur-[6px] border-b py-4 px-6 flex items-center justify-between"
+        style={{ backgroundColor: 'var(--preview-surface-muted)', borderColor: 'var(--preview-border)' }}
+      >
         {/* Left: hamburger + restaurant name */}
         <div className="flex items-center gap-3">
           <button className="flex-shrink-0" aria-label="Open menu">
-            {/* Hamburger 3-lines SVG 18×12 */}
             <svg width="18" height="12" viewBox="0 0 18 12" fill="none">
-              <rect x="0" y="0" width="18" height="2" rx="1" fill="#2d3338" />
-              <rect x="0" y="5" width="18" height="2" rx="1" fill="#2d3338" />
-              <rect x="0" y="10" width="18" height="2" rx="1" fill="#2d3338" />
+              <rect x="0" y="0" width="18" height="2" rx="1" fill="var(--preview-text-primary)" />
+              <rect x="0" y="5" width="18" height="2" rx="1" fill="var(--preview-text-primary)" />
+              <rect x="0" y="10" width="18" height="2" rx="1" fill="var(--preview-text-primary)" />
             </svg>
           </button>
-          <span className="text-[20px] font-bold text-[#2d3338] tracking-[-0.5px]">
+          <span className="text-[20px] font-bold tracking-[-0.5px]" style={{ color: 'var(--preview-text-primary)' }}>
             {menu.name}
           </span>
         </div>
@@ -154,10 +165,9 @@ const Page = () => {
           className="flex items-center justify-center"
           aria-label="Search"
         >
-          {/* Magnifying glass SVG 18×18 */}
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <circle cx="7.5" cy="7.5" r="6" stroke="#2d3338" strokeWidth="1.5" />
-            <path d="M12 12L16.5 16.5" stroke="#2d3338" strokeWidth="1.5" strokeLinecap="round" />
+            <circle cx="7.5" cy="7.5" r="6" stroke="var(--preview-text-primary)" strokeWidth="1.5" />
+            <path d="M12 12L16.5 16.5" stroke="var(--preview-text-primary)" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
         </button>
       </div>
@@ -165,79 +175,36 @@ const Page = () => {
       {/* ── Scrollable content ── */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto pt-[65px] pb-32"
+        className="flex-1 overflow-y-auto pb-32"
+        style={{
+          paddingTop: 'var(--preview-scroll-pt)',
+          paddingLeft: 'var(--preview-scroll-px)',
+          paddingRight: 'var(--preview-scroll-px)',
+        }}
       >
-        {categories &&
-          categories.map((category, index) => (
-            <div key={category.id} id={`category-${category.id}`}>
-              <CategorieCard
-                isOpen={openCategoryId === category.id}
-                onToggle={() =>
-                  setOpenCategoryId(prev =>
-                    prev === category.id ? null : category.id
-                  )
-                }
-                isLast={categories.length - 1 === index}
-                category={category}
-                addToCart={addToCart}
-                removeFromCart={removeFromCart}
-                isInCart={isInCart}
-              />
-            </div>
-          ))}
+        {categories && (
+          <ThemeRenderer
+            themeId={themeId}
+            categories={categories}
+            openCategoryId={openCategoryId}
+            onToggleCategory={(id) =>
+              setOpenCategoryId(prev => prev === id ? null : id)
+            }
+            addToCart={addToCart}
+            removeFromCart={removeFromCart}
+            isInCart={isInCart}
+          />
+        )}
       </div>
 
-      {/* ── Floating "Menu" button ── */}
-      <div className="fixed bottom-[88px] right-4 z-40">
-        <button
-          onClick={() => setShowMenuModal(true)}
-          className="bg-[#5c5c63] rounded-[16px] px-5 py-3 flex items-center gap-2 shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)]"
-        >
-          {/* Fork/utensils icon 15×15 */}
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2" />
-            <path d="M7 2v20" />
-            <path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7" />
-          </svg>
-          <span className="text-white text-[14px] font-bold">Menu</span>
-        </button>
-      </div>
-
-      {/* ── Cart bar ── */}
-      {cart.length > 0 && (
-        <div className="fixed bottom-4 left-4 right-4 z-40">
-          <div className="bg-[#2d3338] border border-[rgba(255,255,255,0.05)] rounded-[16px] p-[17px] shadow-[0px_25px_50px_-12px_rgba(0,0,0,0.25)] flex items-center justify-between gap-3">
-            {/* Left side */}
-            <button
-              onClick={() => setShowConfirm(true)}
-              className="flex items-center gap-3 flex-1 min-w-0 text-left"
-            >
-              {/* Orange badge */}
-              <div className="flex-shrink-0 size-[32px] rounded-[8px] bg-[#a04100] flex items-center justify-center">
-                <span className="text-[14px] font-bold text-[#fff6f3]">
-                  {cart.length}
-                </span>
-              </div>
-              <div className="min-w-0">
-                <p className="text-[12px] font-bold text-[#f9f9fb] leading-none mb-[3px]">
-                  Review Order
-                </p>
-                <p className="text-[10px] text-[rgba(221,227,233,0.6)] truncate">
-                  {previewText}
-                </p>
-              </div>
-            </button>
-
-            {/* Right: checkout button */}
-            <button
-              onClick={() => setShowConfirm(true)}
-              className="flex-shrink-0 bg-[#a04100] rounded-[12px] px-5 py-2 text-[12px] font-black uppercase tracking-[1.2px] text-[#fff6f3]"
-            >
-              CHECKOUT
-            </button>
-          </div>
-        </div>
-      )}
+      {/* ── Menu button + Cart bar (themed) ── */}
+      <ThemeChrome
+        themeId={themeId}
+        cart={cart}
+        previewText={previewText}
+        onShowConfirm={() => setShowConfirm(true)}
+        onShowMenuModal={() => setShowMenuModal(true)}
+      />
 
       {/* ── Category Select Modal ── */}
       {showMenuModal && categories && (
@@ -297,6 +264,7 @@ const Page = () => {
         </div>
       )}
     </div>
+    </PreviewThemeContext.Provider>
   );
 };
 

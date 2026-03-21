@@ -7,6 +7,7 @@ export interface Menu {
   description: string | null
   isPublic: boolean
   shareToken: string | null
+  theme: string
   userId: string
   userEmail: string
   createdAt: string
@@ -122,6 +123,7 @@ export const menuApi = {
     name?: string
     description?: string
     isPublic?: boolean
+    theme?: string
   }): Promise<ApiResponse<Menu>> => {
     const response = await fetch(`${API_BASE}/menus/${id}`, {
       method: 'PUT',

@@ -72,6 +72,16 @@ export default function Dashboard() {
     }
   }
 
+  const handleThemeChange = async (menu: Menu, themeId: string) => {
+    try {
+      await menuApi.updateMenu(menu.id, { theme: themeId })
+      loadMenus()
+    } catch (error) {
+      console.error('Failed to update theme:', error)
+      toast.error('Failed to update theme')
+    }
+  }
+
   const handleDeleteMenu = async (menu: Menu) => {
     if (!confirm(`Are you sure you want to delete "${menu.name}"? This action cannot be undone.`)) {
       return
@@ -249,6 +259,7 @@ export default function Dashboard() {
                 onDelete={handleDeleteMenu}
                 onShare={handleShareMenu}
                 onPreview={handlePreviewMenu}
+                onThemeChange={handleThemeChange}
               />
             ))}
           </div>

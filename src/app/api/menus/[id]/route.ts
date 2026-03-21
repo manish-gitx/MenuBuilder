@@ -75,13 +75,14 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         description: true,
         isPublic: true,
         shareToken: true,
+        theme: true,
         userId: true,
         userEmail: true,
         createdAt: true,
         updatedAt: true
       }
     })
-    
+
     return successResponse(updatedMenu, 'Menu updated successfully')
   } catch (error) {
     return handleError(error)
