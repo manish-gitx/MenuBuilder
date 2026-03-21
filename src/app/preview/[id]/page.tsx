@@ -54,8 +54,12 @@ const Page = () => {
     if (saved) { try { return JSON.parse(saved); } catch {} }
     return [];
   });
+  const [hasScrolled, setHasScrolled] = useState(false);
+  const [passedCategoryHeader, setPassedCategoryHeader] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(0);
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
 
   const addToCart = (item: MenuItem) => setCart(prev => [...prev, item]);
   const removeFromCart = (item: MenuItem) =>
@@ -76,6 +80,39 @@ const Page = () => {
   useEffect(() => {
     if (openCategoryId) ls.set(CAT_KEY, openCategoryId);
   }, [openCategoryId, CAT_KEY]);
+
+  // Track scroll to swap header
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const handleScroll = () => {
+      setHasScrolled(container.scrollTop > 10);
+      // Check if we've scrolled past the toggled category's header
+      if (openCategoryId) {
+        const el = document.getElementById(`category-${openCategoryId}`);
+        if (el && container) {
+          const containerTop = container.getBoundingClientRect().top;
+          const elBottom = el.querySelector("button")?.getBoundingClientRect().bottom ?? el.getBoundingClientRect().bottom;
+          setPassedCategoryHeader(elBottom - containerTop < 0);
+        }
+      } else {
+        setPassedCategoryHeader(false);
+      }
+    };
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [loading, openCategoryId]);
+
+  // Measure header height so scroll container padding stays correct
+  useEffect(() => {
+    const header = headerRef.current;
+    if (!header) return;
+    const observer = new ResizeObserver(entries => {
+      setHeaderHeight(entries[0].contentRect.height);
+    });
+    observer.observe(header);
+    return () => observer.disconnect();
+  }, [loading]);
 
   useEffect(() => {
     const fetchMenu = async () => {
@@ -142,27 +179,58 @@ const Page = () => {
     >
       {/* ── Header ── */}
       <div
-        className="fixed top-0 left-0 right-0 z-40 backdrop-blur-[6px] border-b py-4 px-6 flex items-center justify-between"
+        ref={headerRef}
+        className="fixed top-0 left-0 right-0 z-40 backdrop-blur-[6px] border-b px-4 min-[390px]:px-6"
         style={{ backgroundColor: 'var(--preview-surface-muted)', borderColor: 'var(--preview-border)' }}
       >
-        {/* Left: restaurant name */}
-        <div className="flex gap-2 min-w-0 flex-1 mr-3">
-          <span className="text-[17px] min-[390px]:text-[19px] sm:text-xl md:text-[22px] font-bold tracking-[-0.5px] truncate min-w-0" style={{ color: 'var(--preview-text-primary)' }}>
-            {menu.name}
-          </span>
-        </div>
-
-        {/* Right: search icon */}
-        <button
-          onClick={() => setShowSearch(true)}
-          className="flex items-center justify-center"
-          aria-label="Search"
-        >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <circle cx="7.5" cy="7.5" r="6" stroke="var(--preview-text-primary)" strokeWidth="1.5" />
-            <path d="M12 12L16.5 16.5" stroke="var(--preview-text-primary)" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-        </button>
+        {hasScrolled ? (
+          /* Scrolled state: search bar + optional category name */
+          <div className="py-4 flex flex-col gap-2">
+            <button
+              onClick={() => setShowSearch(true)}
+              className="flex items-center gap-2 flex-1 rounded-full px-4 py-2"
+              style={{ backgroundColor: 'var(--preview-surface-low)' }}
+              aria-label="Search"
+            >
+              <svg width="15" height="15" viewBox="0 0 18 18" fill="none" className="flex-shrink-0">
+                <circle cx="7.5" cy="7.5" r="6" stroke="var(--preview-text-muted)" strokeWidth="1.5" />
+                <path d="M12 12L16.5 16.5" stroke="var(--preview-text-muted)" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              <span className="text-[13px] min-[390px]:text-sm truncate" style={{ color: 'var(--preview-text-muted)' }}>
+                Search dishes...
+              </span>
+            </button>
+            <div className={`grid transition-[grid-template-rows] duration-200 ease-out ${passedCategoryHeader && openCategoryId ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+              <div className="overflow-hidden">
+                <div className="flex items-center gap-2 px-1 pb-0.5">
+                  <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: 'var(--preview-accent)' }} />
+                  <span className="text-[15px] min-[390px]:text-base font-extrabold tracking-[-0.3px] truncate" style={{ color: 'var(--preview-text-primary)' }}>
+                    {categories?.find(c => c.id === openCategoryId)?.name ?? ''}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Default state: restaurant name + search icon */
+          <div className="py-4 flex items-center justify-between">
+            <div className="flex gap-2 min-w-0 flex-1 mr-3">
+              <span className="text-[17px] min-[390px]:text-[19px] sm:text-xl md:text-[22px] font-bold tracking-[-0.5px] truncate min-w-0" style={{ color: 'var(--preview-text-primary)' }}>
+                {menu.name}
+              </span>
+            </div>
+            <button
+              onClick={() => setShowSearch(true)}
+              className="flex items-center justify-center"
+              aria-label="Search"
+            >
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <circle cx="7.5" cy="7.5" r="6" stroke="var(--preview-text-primary)" strokeWidth="1.5" />
+                <path d="M12 12L16.5 16.5" stroke="var(--preview-text-primary)" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ── Scrollable content ── */}
@@ -170,7 +238,7 @@ const Page = () => {
         ref={scrollRef}
         className="flex-1 overflow-y-auto pb-32"
         style={{
-          paddingTop: 'var(--preview-scroll-pt)',
+          paddingTop: headerHeight > 0 ? `${headerHeight}px` : 'var(--preview-scroll-pt)',
           paddingLeft: 'var(--preview-scroll-px)',
           paddingRight: 'var(--preview-scroll-px)',
         }}
@@ -180,9 +248,25 @@ const Page = () => {
             themeId={themeId}
             categories={categories}
             openCategoryId={openCategoryId}
-            onToggleCategory={(id) =>
-              setOpenCategoryId(prev => prev === id ? null : id)
-            }
+            onToggleCategory={(id) => {
+              setOpenCategoryId(prev => {
+                if (prev === id) {
+                  setPassedCategoryHeader(false);
+                  return null;
+                }
+                setPassedCategoryHeader(false);
+                setTimeout(() => {
+                  const el = document.getElementById(`category-${id}`);
+                  if (el && scrollRef.current) {
+                    const containerTop = scrollRef.current.getBoundingClientRect().top;
+                    const elTop = el.getBoundingClientRect().top;
+                    const offset = headerRef.current ? headerRef.current.getBoundingClientRect().height + 16 : 72;
+                    scrollRef.current.scrollBy({ top: elTop - containerTop - offset, behavior: "smooth" });
+                  }
+                }, 50);
+                return id;
+              });
+            }}
             addToCart={addToCart}
             removeFromCart={removeFromCart}
             isInCart={isInCart}
@@ -214,8 +298,9 @@ const Page = () => {
               if (el && scrollRef.current) {
                 const containerTop = scrollRef.current.getBoundingClientRect().top;
                 const elTop = el.getBoundingClientRect().top;
+                const offset = headerRef.current ? headerRef.current.getBoundingClientRect().height + 16 : 72;
                 scrollRef.current.scrollBy({
-                  top: elTop - containerTop - 8,
+                  top: elTop - containerTop - offset,
                   behavior: "smooth",
                 });
               }
