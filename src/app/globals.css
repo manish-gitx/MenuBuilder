@@ -409,6 +409,15 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Prevent text selection during touch scrolling on problematic elements */
 .no-select {
   -webkit-user-select: none;
