@@ -32,12 +32,12 @@ const CategorieCard = ({
     ) ?? 0);
 
   return (
-    <div className="isolate w-full">
+    <div className="w-full">
       {/* Category header */}
       <button
         onClick={onToggle}
-        className="w-full border-b py-[14px] min-[390px]:py-[16px] px-[8px] flex items-center justify-between gap-2"
-        style={{ borderColor: 'var(--preview-border)', backgroundColor: 'var(--preview-bg)' }}
+        className={`w-full border-b py-[14px] min-[390px]:py-[16px] px-[8px] flex items-center justify-between gap-2${isOpen ? ' sticky z-10' : ''}`}
+        style={{ borderColor: 'var(--preview-border)', backgroundColor: 'var(--preview-bg)', ...(isOpen ? { top: 'var(--sticky-top, 0px)' } : {}) }}
       >
         <div className="flex items-start gap-2 min-w-0 flex-1">
           <span
