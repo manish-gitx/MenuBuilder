@@ -59,11 +59,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       
       // Upload directly to S3 with your bucket name
       const uploadParams = {
-        Bucket: 'menu-catering', // Using your actual bucket name
+        Bucket: process.env.AWS_S3_BUCKET_NAME, // Using your actual bucket name
         Key: fileName,
         Body: Buffer.from(buffer),
         ContentType: file.type,
-        ACL: 'public-read' as const
       }
       
       console.log('Uploading to S3:', { bucket: uploadParams.Bucket, key: uploadParams.Key })

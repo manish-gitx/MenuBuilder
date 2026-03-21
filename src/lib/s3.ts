@@ -77,7 +77,6 @@ export const uploadPdfToS3 = async (buffer: ArrayBuffer, filename: string): Prom
     Key: key,
     Body: Buffer.from(buffer),
     ContentType: 'application/pdf',
-    ACL: 'public-read',
   }).promise()
 
   const region = process.env.AWS_REGION || 'us-east-1'
