@@ -20,6 +20,7 @@ model Menu {
   description String?
   isPublic    Boolean  @default(false)
   shareToken  String?  @unique
+  theme       String   @default("default")
   userId      String   // Clerk user ID
   userEmail   String   // User's email from Clerk
   createdAt   DateTime @default(now())

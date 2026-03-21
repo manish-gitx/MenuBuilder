@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
           description: true,
           isPublic: true,
           shareToken: true,
+          theme: true,
           userId: true,
           userEmail: true,
           createdAt: true,
@@ -114,13 +115,14 @@ export async function POST(request: NextRequest) {
         description: true,
         isPublic: true,
         shareToken: true,
+        theme: true,
         userId: true,
         userEmail: true,
         createdAt: true,
         updatedAt: true
       }
     })
-    
+
     return successResponse(menu, 'Menu created successfully')
   } catch (error) {
     return handleError(error)
