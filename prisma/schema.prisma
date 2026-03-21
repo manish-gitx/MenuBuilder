@@ -43,6 +43,7 @@ model Order {
   date         String?
   menuSnapshot Json
   referralCode String?
+  pdfUrl       String?
   createdAt    DateTime @default(now())
 
   menu     Menu      @relation(fields: [menuId], references: [id])

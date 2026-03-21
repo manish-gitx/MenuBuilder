@@ -12,6 +12,7 @@ const createOrderSchema = z.object({
   date: z.string().optional(),
   menuSnapshot: z.array(z.any()),
   referralCode: z.string().optional(),
+  pdfUrl: z.string().url().optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -39,6 +40,7 @@ export async function POST(request: NextRequest) {
         date: data.date,
         menuSnapshot: data.menuSnapshot,
         referralCode: data.referralCode ?? null,
+        pdfUrl: data.pdfUrl ?? null,
       },
     })
 

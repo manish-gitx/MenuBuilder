@@ -224,23 +224,8 @@ const OrderConfirmScreen = ({
     try {
       const doc = buildPdf();
 
-      // Save order to DB
-      await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          menuId,
-          menuName,
-          phone,
-          vegGuests,
-          nonVegGuests,
-          date: date || undefined,
-          menuSnapshot: cart,
-          referralCode: referralCode || undefined,
-        }),
-      });
-
-      // Upload PDF to S3 and send WhatsApp (non-blocking)
+      // Upload PDF to S3 first to get URL
+      let pdfUrl: string | undefined;
       try {
         const pdfBuf = doc.output("arraybuffer");
         const filename = `${menuName.replace(/\s+/g, "-")}-${Date.now()}.pdf`;
@@ -253,15 +238,37 @@ const OrderConfirmScreen = ({
           }),
         });
         if (uploadRes.ok) {
-          const { url } = await uploadRes.json();
-          fetch("/api/orders/send-whatsapp", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ pdfUrl: url, menuName, vegGuests, nonVegGuests, date, phone }),
-          }).catch(() => {});
+          const resJson = await uploadRes.json();
+          pdfUrl = resJson?.data?.url;
         }
       } catch {
-        // WhatsApp / S3 errors are non-fatal
+        // S3 upload failure is non-fatal
+      }
+
+      // Save order to DB (with pdfUrl if available)
+      await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          menuId,
+          menuName,
+          phone,
+          vegGuests,
+          nonVegGuests,
+          date: date || undefined,
+          menuSnapshot: cart,
+          referralCode: referralCode || undefined,
+          pdfUrl: pdfUrl || undefined,
+        }),
+      });
+
+      // Send WhatsApp (non-blocking)
+      if (pdfUrl) {
+        fetch("/api/orders/send-whatsapp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pdfUrl, menuName, vegGuests, nonVegGuests, date, phone }),
+        }).catch(() => {});
       }
 
       // Download PDF locally

@@ -16,6 +16,7 @@ interface Order {
   nonVegGuests: number
   date: string | null
   referralCode: string | null
+  pdfUrl: string | null
   createdAt: string
   menuSnapshot: unknown[]
   referrer?: { name: string; code: string; rewardAmount: number } | null
@@ -204,7 +205,7 @@ function OrdersTab() {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-muted/50 text-muted-foreground">
-              {['Date', 'Menu', 'Phone', 'Veg', 'Non-Veg', 'Event Date', 'Referral', 'Items', ''].map(h => (
+              {['Date', 'Menu', 'Phone', 'Veg', 'Non-Veg', 'Event Date', 'Referral', 'Items', 'S3 PDF', ''].map(h => (
                 <th key={h} className="px-4 py-3 text-left font-medium whitespace-nowrap">{h}</th>
               ))}
             </tr>
@@ -231,6 +232,20 @@ function OrdersTab() {
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">
                   {Array.isArray(o.menuSnapshot) ? o.menuSnapshot.length : '—'}
+                </td>
+                <td className="px-4 py-3">
+                  {o.pdfUrl ? (
+                    <a
+                      href={o.pdfUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1 text-xs rounded-lg bg-blue-500/10 text-blue-600 font-medium hover:bg-blue-500/20 transition-colors whitespace-nowrap"
+                    >
+                      ↗ View
+                    </a>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">—</span>
+                  )}
                 </td>
                 <td className="px-4 py-3">
                   <button
