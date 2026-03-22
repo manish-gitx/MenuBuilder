@@ -53,9 +53,8 @@ export interface MenuItem {
 export interface Tag {
   id: string
   name: string
-  type: 'dietary' | 'highlight' | 'cuisine' | 'spice_level'
+  type: 'dietary' | 'highlight'
   color: string
-  icon: string | null
   createdAt: string
 }
 

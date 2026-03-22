@@ -133,6 +133,15 @@ const Page = () => {
     if (id) fetchMenu();
   }, [id]);
 
+  const { id: themeId, tokens } = getTheme(menu?.theme ?? 'default')
+
+  // Prevent white flash on overscroll bounce by syncing body bg to theme
+  useEffect(() => {
+    const prev = document.body.style.backgroundColor
+    document.body.style.backgroundColor = tokens['--preview-bg']
+    return () => { document.body.style.backgroundColor = prev }
+  }, [tokens])
+
   const previewText = cart
     .slice(0, 3)
     .map(i => i.name)
@@ -165,12 +174,10 @@ const Page = () => {
     );
   }
 
-  const { id: themeId, tokens } = getTheme(menu.theme ?? 'default')
-
   return (
     <PreviewThemeContext.Provider value={{ themeId }}>
     <div
-      className="h-screen flex flex-col overflow-hidden"
+      className="h-[100dvh] flex flex-col overflow-hidden"
       style={{ ...(tokens as React.CSSProperties), backgroundColor: 'var(--preview-bg)', fontFamily: 'var(--preview-font-family)' }}
     >
       {/* ── Header ── */}
@@ -201,7 +208,10 @@ const Page = () => {
           /* Default state: restaurant name + search icon */
           <div className="py-4 flex items-center justify-between">
             <div className="flex gap-2 min-w-0 flex-1 mr-3">
-              <span className="text-[17px] min-[390px]:text-[19px] sm:text-xl md:text-[22px] font-bold tracking-[-0.5px] truncate min-w-0" style={{ color: 'var(--preview-text-primary)' }}>
+              <span
+                className={`text-[17px] min-[390px]:text-[19px] sm:text-xl md:text-[22px] font-bold tracking-[-0.5px] truncate min-w-0${themeId === 'midnight' ? ' gold-shine' : ''}`}
+                style={themeId === 'midnight' ? undefined : { color: 'var(--preview-text-primary)' }}
+              >
                 {menu.name}
               </span>
             </div>
@@ -222,10 +232,11 @@ const Page = () => {
       {/* ── Scrollable content ── */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto pb-32"
+        className="flex-1 overflow-y-auto overscroll-y-contain"
         style={{
           paddingLeft: 'var(--preview-scroll-px)',
           paddingRight: 'var(--preview-scroll-px)',
+          paddingBottom: cart.length > 0 ? '160px' : '120px',
           ['--sticky-top' as string]: '0px',
         } as React.CSSProperties}
       >

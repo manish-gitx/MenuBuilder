@@ -46,7 +46,7 @@ model Order {
   pdfUrl       String?
   createdAt    DateTime @default(now())
 
-  menu     Menu      @relation(fields: [menuId], references: [id])
+  menu     Menu      @relation(fields: [menuId], references: [id], onDelete: Cascade)
   referrer Referrer? @relation(fields: [referralCode], references: [code])
 
   @@map("orders")
@@ -108,9 +108,8 @@ model MenuItem {
 model Tag {
   id        String   @id @default(uuid())
   name      String
-  type      String   // 'dietary', 'highlight', 'cuisine', 'spice_level'
+  type      String   // 'dietary' | 'highlight'
   color     String   @default("#000000")
-  icon      String?
   createdAt DateTime @default(now())
 
   // Relations

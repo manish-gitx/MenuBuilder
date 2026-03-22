@@ -16,7 +16,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         name: true,
         type: true,
         color: true,
-        icon: true,
         createdAt: true,
         _count: {
           select: {
@@ -61,11 +60,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         name: true,
         type: true,
         color: true,
-        icon: true,
         createdAt: true
       }
     })
-    
+
     return successResponse(updatedTag, 'Tag updated successfully')
   } catch (error) {
     return handleError(error)

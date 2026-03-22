@@ -37,7 +37,6 @@ export async function GET(request: NextRequest) {
           name: true,
           type: true,
           color: true,
-          icon: true,
           createdAt: true,
           _count: {
             select: {
@@ -72,11 +71,10 @@ export async function POST(request: NextRequest) {
         name: true,
         type: true,
         color: true,
-        icon: true,
         createdAt: true
       }
     })
-    
+
     return successResponse(tag, 'Tag created successfully')
   } catch (error) {
     return handleError(error)

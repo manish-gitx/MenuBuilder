@@ -37,6 +37,8 @@ export interface ThemeTokens {
   '--preview-image-radius': string
   '--preview-add-btn-size': string
   '--preview-add-btn-bg': string
+  '--preview-item-btn-bg': string
+  '--preview-add-btn-active-bg': string
   '--preview-add-btn-color': string
   '--preview-add-btn-radius': string
   '--preview-count-radius': string
@@ -81,6 +83,8 @@ export const themes: Record<ThemeId, ThemeTokens> = {
     '--preview-image-radius': '12px',
     '--preview-add-btn-size': '20px',
     '--preview-add-btn-bg': '#a04100',
+    '--preview-item-btn-bg': '#a04100',
+    '--preview-add-btn-active-bg': '#7a3100',
     '--preview-add-btn-color': '#fff6f3',
     '--preview-add-btn-radius': '50%',
     '--preview-count-radius': '4px',
@@ -106,7 +110,7 @@ export const themes: Record<ThemeId, ThemeTokens> = {
     '--preview-accent': '#ffb95a',
     '--preview-accent-text': '#462a00',
     '--preview-accent-subtle': 'rgba(255,185,90,0.12)',
-    '--preview-nav-bg': 'rgba(53,52,54,0.9)',
+    '--preview-nav-bg': 'rgba(42,42,43,0.9)',
     '--preview-nav-border': 'rgba(255,185,90,0.3)',
     '--preview-cart-bg': 'linear-gradient(to right, #2a2a2b, #353436)',
     '--preview-cart-text': '#d4c5ab',
@@ -122,7 +126,9 @@ export const themes: Record<ThemeId, ThemeTokens> = {
     '--preview-card-radius': '8px',
     '--preview-image-radius': '4px',
     '--preview-add-btn-size': '32px',
-    '--preview-add-btn-bg': 'linear-gradient(135deg, #ffe0be 0%, #ffbd65 100%)',
+    '--preview-add-btn-bg': 'linear-gradient(to right, #FFBF00, #ffbd65)',
+    '--preview-item-btn-bg': 'linear-gradient(135deg, #ffe0be 0%, #ffbd65 100%)',
+    '--preview-add-btn-active-bg': 'linear-gradient(135deg, #FFBF00 0%, #E6A800 100%)',
     '--preview-add-btn-color': '#462a00',
     '--preview-add-btn-radius': '10px',
     '--preview-count-radius': '12px',

@@ -53,20 +53,18 @@ export const updateMenuItemSchema = z.object({
 // Tag validation schemas
 export const createTagSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
-  type: z.enum(['dietary', 'highlight', 'cuisine', 'spice_level'], {
-    message: 'Type must be one of: dietary, highlight, cuisine, spice_level'
+  type: z.enum(['dietary', 'highlight'], {
+    message: 'Type must be one of: dietary, highlight'
   }),
   color: z.string().regex(/^#[0-9A-F]{6}$/i, 'Color must be a valid hex color').optional(),
-  icon: z.string().optional()
 })
 
 export const updateTagSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters').optional(),
-  type: z.enum(['dietary', 'highlight', 'cuisine', 'spice_level'], {
-    message: 'Type must be one of: dietary, highlight, cuisine, spice_level'
+  type: z.enum(['dietary', 'highlight'], {
+    message: 'Type must be one of: dietary, highlight'
   }).optional(),
   color: z.string().regex(/^#[0-9A-F]{6}$/i, 'Color must be a valid hex color').optional(),
-  icon: z.string().optional()
 })
 
 // Query parameter validation
@@ -93,7 +91,7 @@ export const menuItemQuerySchema = z.object({
 }).merge(paginationSchema)
 
 export const tagQuerySchema = z.object({
-  type: z.enum(['dietary', 'highlight', 'cuisine', 'spice_level']).optional(),
+  type: z.enum(['dietary', 'highlight']).optional(),
   search: z.string().optional()
 }).merge(paginationSchema)
 

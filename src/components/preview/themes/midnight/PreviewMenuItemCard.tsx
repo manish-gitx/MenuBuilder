@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Plus, Check } from "lucide-react";
 import { MenuItem } from "../../../../lib/api";
+import { getTagMeta } from "../../../../lib/constants/tags";
 
 interface PreviewMenuItemCardProps {
   item: MenuItem;
@@ -121,7 +122,7 @@ const PreviewMenuItemCard = ({
                   letterSpacing: '-0.45px',
                 }}
               >
-                {tag.name}
+                {tag.name === 'Spicy' && getTagMeta(tag.name)?.emoji} {tag.name}
               </span>
             ))}
           </div>
@@ -131,8 +132,8 @@ const PreviewMenuItemCard = ({
       {/* Add button — gradient, absolute top-right */}
       <button
         onClick={() => inCart ? removeFromCart(item) : addToCart(item)}
-        className="absolute top-[10px] right-[16px] size-[32px] rounded-[10px] flex items-center justify-center shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)]"
-        style={{ background: 'linear-gradient(135deg, #ffe0be 0%, #ffbd65 100%)' }}
+        className="absolute top-[10px] right-[16px] size-[32px] rounded-[10px] flex items-center justify-center shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] transition-all duration-200"
+        style={{ background: inCart ? 'var(--preview-add-btn-active-bg)' : 'var(--preview-item-btn-bg)' }}
       >
         {inCart ? (
           <Check style={{ width: 12, height: 12, color: '#462a00', flexShrink: 0 }} />

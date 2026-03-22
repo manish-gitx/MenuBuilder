@@ -1,6 +1,20 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
+@keyframes goldShine {
+  0% { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+.gold-shine {
+  background: linear-gradient(90deg, #b8860b 0%, #ffd700 30%, #fffacd 50%, #ffd700 70%, #b8860b 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: goldShine 3s linear infinite;
+}
+
 
 @theme {
   /* Warm, inviting catering brand colors - space-separated HSL format for Tailwind v4 */

@@ -30,7 +30,7 @@ export default function Dashboard() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [filterPublic, setFilterPublic] = useState<boolean | undefined>(undefined)
 
-  // Load menus
+  // Load menus — seeds demo menu on first login if user has none
   const loadMenus = useCallback(async () => {
     try {
       setLoading(true)
@@ -39,7 +39,14 @@ export default function Dashboard() {
         isPublic: filterPublic,
         limit: 50
       })
-      setMenus(response.data)
+
+      if (response.data.length === 0 && !searchQuery && filterPublic === undefined) {
+        await fetch('/api/menus/seed-demo', { method: 'POST' })
+        const seeded = await menuApi.getMenus({ limit: 50 })
+        setMenus(seeded.data)
+      } else {
+        setMenus(response.data)
+      }
     } catch (error) {
       console.error('Failed to load menus:', error)
       toast.error('Failed to load menus')

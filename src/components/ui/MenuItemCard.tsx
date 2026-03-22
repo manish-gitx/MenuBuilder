@@ -1,6 +1,7 @@
 import React from 'react'
 import { MenuItem } from '@/lib/api'
 import { PencilIcon, CameraIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { getTagMeta } from '@/lib/constants/tags'
 
 interface MenuItemCardProps {
   item: MenuItem
@@ -37,7 +38,7 @@ export function MenuItemCard({ item, onEdit, onDelete, onImageUpload }: MenuItem
                   className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
                   style={{ backgroundColor: tag.color }}
                 >
-                  {tag.icon && <span className="mr-1">{tag.icon}</span>}
+                  {getTagMeta(tag.name)?.emoji && <span className="mr-1">{getTagMeta(tag.name)?.emoji}</span>}
                   {tag.name}
                 </span>
               ))}
