@@ -13,7 +13,7 @@ const mild     = { id: "t5", name: "Mild",            type: "highlight" as const
 
 const now = new Date().toISOString();
 
-function item(id: string, catId: string, name: string, desc: string, tags: typeof nonVegTag[], order: number): MenuItem {
+function item(id: string, catId: string, name: string, desc: string, tags: (typeof nonVegTag | typeof chefsChoice)[], order: number): MenuItem {
   return { id, categoryId: catId, name, description: desc, ingredients: null, imageUrl: null, sortOrder: order, isActive: true, createdAt: now, updatedAt: now, tags };
 }
 

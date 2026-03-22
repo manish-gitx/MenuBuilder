@@ -55,6 +55,7 @@ export interface Tag {
   name: string
   type: 'dietary' | 'highlight'
   color: string
+  icon?: string
   createdAt: string
 }
 
