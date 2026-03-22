@@ -30,7 +30,6 @@ export default function Dashboard() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [filterPublic, setFilterPublic] = useState<boolean | undefined>(undefined)
 
-  // Load menus — seeds demo menu on first login if user has none
   const loadMenus = useCallback(async () => {
     try {
       setLoading(true)
@@ -39,14 +38,7 @@ export default function Dashboard() {
         isPublic: filterPublic,
         limit: 50
       })
-
-      if (response.data.length === 0 && !searchQuery && filterPublic === undefined) {
-        await fetch('/api/menus/seed-demo', { method: 'POST' })
-        const seeded = await menuApi.getMenus({ limit: 50 })
-        setMenus(seeded.data)
-      } else {
-        setMenus(response.data)
-      }
+      setMenus(response.data)
     } catch (error) {
       console.error('Failed to load menus:', error)
       toast.error('Failed to load menus')
@@ -54,6 +46,20 @@ export default function Dashboard() {
       setLoading(false)
     }
   }, [searchQuery, filterPublic])
+
+  const handleLoadDemoMenu = async () => {
+    try {
+      setLoading(true)
+      await fetch('/api/menus/seed-demo', { method: 'POST' })
+      await loadMenus()
+      toast.success('Demo menu loaded!')
+    } catch (error) {
+      console.error('Failed to load demo menu:', error)
+      toast.error('Failed to load demo menu')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
     if (userId) {
@@ -295,10 +301,15 @@ export default function Dashboard() {
               }
             </p>
             {!searchQuery && (
-              <Button onClick={() => setShowCreateModal(true)}>
-                <PlusIcon className="w-5 h-5 mr-2" />
-                Create Your First Menu
-              </Button>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                <Button onClick={() => setShowCreateModal(true)}>
+                  <PlusIcon className="w-5 h-5 mr-2" />
+                  Create Your First Menu
+                </Button>
+                <Button variant="outline" onClick={handleLoadDemoMenu}>
+                  Try Demo Menu
+                </Button>
+              </div>
             )}
           </div>
         )}
