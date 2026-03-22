@@ -228,7 +228,7 @@ const OrderConfirmScreen = ({
       let pdfUrl: string | undefined;
       try {
         const pdfBuf = doc.output("arraybuffer");
-        const filename = `${menuName.replace(/\s+/g, "-")}-${Date.now()}.pdf`;
+        const filename = `${Date.now()}.pdf`;
         const uploadRes = await fetch("/api/orders/upload-pdf", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -267,7 +267,7 @@ const OrderConfirmScreen = ({
         fetch("/api/orders/send-whatsapp", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pdfUrl, menuName, vegGuests, nonVegGuests, date, phone }),
+          body: JSON.stringify({ pdfUrl, menuName, vegGuests, nonVegGuests, date, phone, referralCode }),
         }).catch(() => {});
       }
 

@@ -93,7 +93,7 @@ const CategorieCard = ({
                       <span
                         className="text-xs sm:text-[13px] md:text-sm font-normal uppercase"
                         style={{
-                          color: isNonVeg ? '#ffb4ab' : isVeg(subItems) ? '#86efac' : 'var(--preview-accent)',
+                          color: '#FFB95A',
                           letterSpacing: 'var(--preview-subcat-tracking)',
                         }}
                       >
