@@ -58,6 +58,7 @@ const Page = () => {
   });
   const [hasScrolled, setHasScrolled] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
+  const [referrerPhone, setReferrerPhone] = useState<string | undefined>();
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -67,10 +68,17 @@ const Page = () => {
     setCart(prev => prev.filter(c => c.id !== item.id));
   const isInCart = (item: MenuItem) => cart.some(c => c.id === item.id);
 
-  // Store referral code from URL param
+  // Store referral code from URL param and fetch referrer phone
   useEffect(() => {
     const ref = searchParams.get('ref');
     if (ref) ls.set(REF_KEY, ref);
+    const code = ref ?? ls.get(REF_KEY);
+    if (code) {
+      fetch(`/api/referrers/${encodeURIComponent(code)}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(json => { if (json?.data?.phone) setReferrerPhone(json.data.phone); })
+        .catch(() => {});
+    }
   }, [searchParams, REF_KEY]);
 
   // Persist cart
@@ -333,6 +341,7 @@ const Page = () => {
             }}
             categories={categories ?? []}
             referralCode={ls.get(REF_KEY) ?? undefined}
+            referrerPhone={referrerPhone}
           />
         </div>
       )}

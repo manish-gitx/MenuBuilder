@@ -14,6 +14,7 @@ interface OrderConfirmScreenProps {
   onConfirm: () => void;
   categories: Category[];
   referralCode?: string;
+  referrerPhone?: string;
 }
 
 const ls = {
@@ -33,6 +34,7 @@ const OrderConfirmScreen = ({
   onConfirm,
   categories,
   referralCode,
+  referrerPhone,
 }: OrderConfirmScreenProps) => {
   const eventKey = `mb_event_${storageKey}`;
 
@@ -187,7 +189,7 @@ const OrderConfirmScreen = ({
       body: [
         ["Vegetarian Guests", String(vegGuests), "Non-Veg Guests", String(nonVegGuests)],
         ["Preferred Date", date || "—", "Phone", phone],
-        ...(referralCode ? [["Referral Code", referralCode, "", ""]] : []),
+        ...(referralCode ? [["Referral Code", referralCode, "Referrer Phone", referrerPhone || "—"]] : []),
       ],
       startY: finalY + 12,
       theme: "plain",
